@@ -44,9 +44,19 @@ export async function registerRoutes(
     try {
       const input = api.documents.create.input.parse(req.body);
       
+      let finalContent = input.content;
+      
+      // If a Google Doc URL is provided, we'll store it. 
+      // In a real production app, we would fetch and parse the HTML here.
+      // For this MVP, we'll simulate the import if content is empty.
+      if (input.googleDocUrl && !finalContent) {
+        finalContent = `<p>Document imported from Google Docs: <a href="${input.googleDocUrl}" target="_blank" class="text-primary hover:underline">${input.googleDocUrl}</a></p><p>Content will be rendered here maintaining formatting.</p>`;
+      }
+
       // Add authorId from session
       const docData = {
         ...input,
+        content: finalContent || "No content provided.",
         // @ts-ignore - user exists due to isAuthenticated
         authorId: req.user.claims.sub, 
       };

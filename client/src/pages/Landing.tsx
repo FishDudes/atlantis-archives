@@ -60,8 +60,8 @@ export default function Landing() {
           </div>
 
           <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight text-white mb-6">
-            <span className="block text-gradient-ocean">The Archive</span>
-            <span className="block text-4xl md:text-5xl lg:text-6xl text-muted-foreground mt-2 font-serif italic">of the Deep</span>
+            <span className="block text-gradient-ocean">Atlantis</span>
+            <span className="block text-4xl md:text-5xl lg:text-6xl text-muted-foreground mt-2 font-serif italic">From the Depths, We Rise</span>
           </h1>
 
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground font-light leading-relaxed">

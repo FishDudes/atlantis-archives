@@ -16,6 +16,7 @@ export const documents = pgTable("documents", {
   authorId: text("author_id").notNull(), // Link to authUsers.id (which is string/varchar)
   isPublic: boolean("is_public").default(false).notNull(),
   category: text("category").default("general").notNull(), // intel, archives, diplomacy, etc.
+  googleDocUrl: text("google_doc_url"), // Added for Google Doc links
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

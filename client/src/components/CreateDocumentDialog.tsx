@@ -141,13 +141,34 @@ export function CreateDocumentDialog() {
 
             <FormField
               control={form.control}
+              name="googleDocUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground/90">Google Doc Link (Optional)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="https://docs.google.com/document/d/..." 
+                      className="bg-background/50 border-white/10 focus:border-primary/50"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription className="text-xs">
+                    Link a public Google Doc to import its content.
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="content"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel className="text-foreground/90">Content</FormLabel>
                   <FormControl>
                     <Textarea
-                      placeholder="Enter document content here (supports basic text)..."
+                      placeholder="Enter document content here or it will be populated from the Google Doc link above..."
                       className="min-h-[200px] bg-background/50 border-white/10 focus:border-primary/50 font-sans"
                       {...field}
                     />

@@ -47,8 +47,7 @@ export function Navigation() {
             <span className="text-primary-foreground font-display font-bold text-xl">A</span>
           </div>
           <div>
-            <h1 className="font-display font-bold text-xl tracking-wider text-primary">ATLANTIS</h1>
-            <p className="text-xs text-muted-foreground tracking-[0.2em] uppercase">Archive</p>
+            <h1 className="font-display font-bold text-xl tracking-wider text-primary uppercase">ATLANTIS</h1>
           </div>
         </Link>
       </div>

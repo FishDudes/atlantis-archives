@@ -55,7 +55,7 @@ export class DatabaseStorage implements IStorage {
     return doc;
   }
 
-  async createDocument(doc: InsertDocument): Promise<Document> {
+  async createDocument(doc: InsertDocument & { googleDocUrl?: string }): Promise<Document> {
     const [newDoc] = await db.insert(documents).values(doc).returning();
     return newDoc;
   }

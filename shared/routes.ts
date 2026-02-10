@@ -44,7 +44,9 @@ export const api = {
     create: {
       method: 'POST' as const,
       path: '/api/documents' as const,
-      input: insertDocumentSchema,
+      input: insertDocumentSchema.extend({
+        googleDocUrl: z.string().url().optional(),
+      }),
       responses: {
         201: z.custom<typeof documents.$inferSelect>(),
         400: errorSchemas.validation,

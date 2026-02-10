@@ -18,6 +18,7 @@ async function fetchUser(): Promise<User | null> {
 }
 
 async function logout(): Promise<void> {
+  // Direct location change for Replit Auth logout
   window.location.href = "/api/logout";
 }
 
