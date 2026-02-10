@@ -42,13 +42,13 @@ export default function Landing() {
             className="w-10 h-10 rounded-lg object-cover"
             data-testid="img-alliance-logo"
           />
-          <span className="font-display font-bold text-xl tracking-wider text-white">ATLANTIS</span>
+          <span className="font-display font-bold text-xl tracking-wider text-cyan-400">ATLANTIS ARCHIVES</span>
         </div>
         <div className="flex items-center gap-3">
           <Button 
             variant="outline" 
             onClick={() => window.open("https://discord.gg/BA3TY4AAPf", "_blank")}
-            className="text-white border-[#5865F2]/50 bg-[#5865F2]/20 backdrop-blur-sm"
+            className="text-white border-[#5865F2]/50 bg-[#5865F2]/20 backdrop-blur-sm hover:shadow-[0_0_25px_0px_rgba(88,101,242,0.5)] transition-all duration-300"
             data-testid="button-discord-server"
           >
             <SiDiscord className="w-4 h-4 mr-2" />
@@ -82,7 +82,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               onClick={handleLogin}
-              className="h-14 px-8 rounded-full text-lg font-semibold bg-[#5865F2] text-white border-[#5865F2] shadow-[0_0_30px_-5px_rgba(88,101,242,0.5)] transition-all"
+              className="h-14 px-8 rounded-full text-lg font-semibold bg-[#5865F2] text-white border-[#5865F2] shadow-[0_0_20px_-5px_rgba(88,101,242,0.4)] hover:shadow-[0_0_35px_0px_rgba(88,101,242,0.7)] transition-all duration-300"
               data-testid="button-enter-archive"
             >
               <SiDiscord className="mr-2 w-5 h-5" />
@@ -91,7 +91,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               variant="outline"
-              className="h-14 px-8 rounded-full text-lg border-white/20 text-white backdrop-blur-sm bg-white/5"
+              className="h-14 px-8 rounded-full text-lg border-white/20 text-white backdrop-blur-sm bg-white/5 shadow-[0_0_15px_-5px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_0px_rgba(6,182,212,0.4)] transition-all duration-300"
               onClick={() => window.open("https://politicsandwar.com", "_blank")}
               data-testid="button-alliance-portal"
             >

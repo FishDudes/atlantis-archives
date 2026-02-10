@@ -86,7 +86,7 @@ export function Navigation() {
             data-testid="img-nav-logo"
           />
           <div>
-            <h1 className="font-display font-bold text-xl tracking-wider text-primary uppercase" data-testid="text-app-title">ATLANTIS</h1>
+            <h1 className="font-display font-bold text-xl tracking-wider text-cyan-400 uppercase" data-testid="text-app-title">ATLANTIS ARCHIVES</h1>
           </div>
         </Link>
       </div>
