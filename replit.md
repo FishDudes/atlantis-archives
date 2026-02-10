@@ -105,7 +105,18 @@ Preferred communication style: Simple, everyday language.
 - **Editor integration**: TipTap Image extension with paste, drag-and-drop, and toolbar upload support
 - **Sanitization**: DOMPurify configured to allow `<img>` tags with src, alt, width, height, style attributes
 
+### Discord Bot
+- **File**: `server/discord-bot.ts` — Discord bot with `/atlantis` slash command
+- **Startup**: Bot starts automatically when the web server starts (called from `server/index.ts`)
+- **Slash Command**: `/atlantis` — replies with an embed linking to the Atlantis Archive website
+- **Library**: discord.js
+- **Registration**: Command registered as a guild command (using DISCORD_GUILD_ID) for instant availability
+
+### Landing Page
+- **Background**: Generated underwater Atlantis fantasy city image (`client/src/assets/images/atlantis-bg.png`)
+- **Dark wash overlay**: Multiple gradient layers ensure text readability over the background image
+
 ## Discord Setup
 - **Redirect URL**: Must be configured in Discord Developer Portal → OAuth2 → Redirects: `https://<your-domain>/api/callback`
 - **Bot**: Must be added to the Atlantis Discord server with permissions to read guild members and roles
-- **Required Bot Permissions**: Read Members, Manage Roles (read)
+- **Required Bot Permissions**: Read Members, Manage Roles (read), Use Slash Commands

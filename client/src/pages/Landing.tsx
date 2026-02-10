@@ -5,6 +5,7 @@ import { ArrowRight, Waves, Anchor, Footprints } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { motion } from "framer-motion";
 import allianceLogo from "@assets/BA10968C-16F4-46FB-979A-0295F2AAEEBC_1770762350945.JPEG";
+import atlantisBg from "@/assets/images/atlantis-bg.png";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -20,15 +21,19 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col bg-[#050A14]">
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[100px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-900/20 blur-[100px]" />
-        <div className="absolute top-[20%] right-[20%] w-[30%] h-[30%] rounded-full bg-teal-900/10 blur-[80px]" />
-      </div>
+    <div className="min-h-screen relative overflow-hidden flex flex-col">
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${atlantisBg})` }}
+        data-testid="img-landing-bg"
+      />
 
-      <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-      
+      <div className="absolute inset-0 bg-gradient-to-b from-[#030810]/80 via-[#050A14]/60 to-[#030810]/90" />
+
+      <div className="absolute inset-0 bg-gradient-to-t from-[#030810] via-transparent to-transparent" />
+
+      <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-[#030810] to-transparent" />
+
       <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <img
@@ -37,13 +42,13 @@ export default function Landing() {
             className="w-10 h-10 rounded-lg object-cover"
             data-testid="img-alliance-logo"
           />
-          <span className="font-display font-bold text-xl tracking-wider text-foreground">ATLANTIS</span>
+          <span className="font-display font-bold text-xl tracking-wider text-white">ATLANTIS</span>
         </div>
         <div className="flex items-center gap-3">
           <Button 
             variant="outline" 
             onClick={() => window.open("https://discord.gg/BA3TY4AAPf", "_blank")}
-            className="text-foreground border-[#5865F2]/40 bg-[#5865F2]/10"
+            className="text-white border-[#5865F2]/50 bg-[#5865F2]/20 backdrop-blur-sm"
             data-testid="button-discord-server"
           >
             <SiDiscord className="w-4 h-4 mr-2" />
@@ -59,17 +64,17 @@ export default function Landing() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="space-y-8"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm mb-4">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-            <span className="text-sm font-medium text-primary/80 tracking-wide uppercase">System Online</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-black/30 border border-white/10 backdrop-blur-md mb-4">
+            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
+            <span className="text-sm font-medium text-cyan-300/90 tracking-wide uppercase">System Online</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight text-white mb-6">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight text-white mb-6 drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
             <span className="block text-gradient-ocean">Atlantis</span>
-            <span className="block text-4xl md:text-5xl lg:text-6xl text-muted-foreground mt-2 font-serif italic">From the Depths, We Rise</span>
+            <span className="block text-4xl md:text-5xl lg:text-6xl text-blue-100/70 mt-2 font-serif italic drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">From the Depths, We Rise</span>
           </h1>
 
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground font-light leading-relaxed">
+          <p className="max-w-2xl mx-auto text-lg md:text-xl text-blue-100/60 font-light leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
             Welcome to the Atlantis Archives! Click the "Login with Discord" button below to get started. Any alliance or P&W information can be found here.
           </p>
 
@@ -77,7 +82,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               onClick={handleLogin}
-              className="h-14 px-8 rounded-full text-lg font-semibold bg-[#5865F2] text-white border-[#5865F2] shadow-[0_0_30px_-5px_rgba(88,101,242,0.4)] transition-all"
+              className="h-14 px-8 rounded-full text-lg font-semibold bg-[#5865F2] text-white border-[#5865F2] shadow-[0_0_30px_-5px_rgba(88,101,242,0.5)] transition-all"
               data-testid="button-enter-archive"
             >
               <SiDiscord className="mr-2 w-5 h-5" />
@@ -86,7 +91,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               variant="outline"
-              className="h-14 px-8 rounded-full text-lg border-white/10 text-foreground"
+              className="h-14 px-8 rounded-full text-lg border-white/20 text-white backdrop-blur-sm bg-white/5"
               onClick={() => window.open("https://politicsandwar.com", "_blank")}
               data-testid="button-alliance-portal"
             >
@@ -106,16 +111,16 @@ export default function Landing() {
             { icon: Anchor, title: "History", desc: "Preserving our legacy and lore" },
             { icon: Footprints, title: "Onboarding", desc: "First steps into Atlantis" },
           ].map((feature, i) => (
-            <div key={i} className="flex flex-col items-center p-6 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors">
-              <feature.icon className="w-8 h-8 text-primary mb-4" />
-              <h3 className="font-display font-semibold text-lg text-foreground mb-2">{feature.title}</h3>
-              <p className="text-sm text-muted-foreground">{feature.desc}</p>
+            <div key={i} className="flex flex-col items-center p-6 rounded-2xl bg-black/30 border border-white/10 backdrop-blur-md hover:bg-black/40 transition-colors">
+              <feature.icon className="w-8 h-8 text-cyan-400 mb-4" />
+              <h3 className="font-display font-semibold text-lg text-white mb-2">{feature.title}</h3>
+              <p className="text-sm text-blue-200/50">{feature.desc}</p>
             </div>
           ))}
         </motion.div>
       </main>
 
-      <footer className="relative z-10 py-6 text-center text-xs text-muted-foreground/40">
+      <footer className="relative z-10 py-6 text-center text-xs text-white/30">
         <p>&copy; {new Date().getFullYear()} Atlantis Alliance. Secure connection established.</p>
       </footer>
     </div>

@@ -7,13 +7,13 @@ export * from "./models/auth";
 
 export const CATEGORIES = [
   { value: "guidelines", label: "Atlantis Guidelines" },
+  { value: "first-steps", label: "First Steps" },
   { value: "new-players", label: "New Players" },
   { value: "internal-affairs", label: "Internal Affairs" },
   { value: "foreign-affairs", label: "Foreign Affairs" },
   { value: "military", label: "Military" },
   { value: "economy", label: "Economy" },
   { value: "technology", label: "Technology" },
-  { value: "first-steps", label: "First Steps" },
   { value: "intel", label: "Intelligence" },
 ] as const;
 
