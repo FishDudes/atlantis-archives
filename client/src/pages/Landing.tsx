@@ -1,9 +1,10 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Waves, Anchor, Ship } from "lucide-react";
+import { ArrowRight, Waves, Anchor, Footprints } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { motion } from "framer-motion";
+import allianceLogo from "@assets/BA10968C-16F4-46FB-979A-0295F2AAEEBC_1770762350945.JPEG";
 
 export default function Landing() {
   const { user } = useAuth();
@@ -35,15 +36,23 @@ export default function Landing() {
           </div>
           <span className="font-display font-bold text-xl tracking-wider text-foreground">ATLANTIS</span>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={handleLogin}
-          className="text-foreground border-[#5865F2]/40 bg-[#5865F2]/10"
-          data-testid="button-member-login"
-        >
-          <SiDiscord className="w-4 h-4 mr-2" />
-          Member Login
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button 
+            variant="outline" 
+            onClick={() => window.open("https://discord.gg/BA3TY4AAPf", "_blank")}
+            className="text-foreground border-[#5865F2]/40 bg-[#5865F2]/10"
+            data-testid="button-discord-server"
+          >
+            <SiDiscord className="w-4 h-4 mr-2" />
+            Discord Server
+          </Button>
+          <img
+            src={allianceLogo}
+            alt="Atlantis Alliance Logo"
+            className="w-10 h-10 rounded-lg object-cover"
+            data-testid="img-alliance-logo"
+          />
+        </div>
       </nav>
 
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
@@ -64,8 +73,7 @@ export default function Landing() {
           </h1>
 
           <p className="max-w-2xl mx-auto text-lg md:text-xl text-muted-foreground font-light leading-relaxed">
-            A centralized intelligence hub for the Atlantis Alliance. 
-            Access diplomatic cables, strategic archives, and operational data securely.
+            Welcome to the Atlantis Archives! Click the "Login with Discord" button below to get started. Any alliance or P&W information can be found here.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
@@ -99,7 +107,7 @@ export default function Landing() {
           {[
             { icon: Waves, title: "Deep Intel", desc: "Secure operational data storage" },
             { icon: Anchor, title: "History", desc: "Preserving our legacy and lore" },
-            { icon: Ship, title: "Fleet Comms", desc: "Diplomatic channel archives" },
+            { icon: Footprints, title: "Onboarding", desc: "First steps into Atlantis" },
           ].map((feature, i) => (
             <div key={i} className="flex flex-col items-center p-6 rounded-2xl bg-white/5 border border-white/5 backdrop-blur-sm hover:bg-white/10 transition-colors">
               <feature.icon className="w-8 h-8 text-primary mb-4" />
