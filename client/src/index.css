@@ -73,6 +73,19 @@
   }
 }
 
+/* TipTap Editor */
+.tiptap p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  color: hsl(var(--muted-foreground));
+  pointer-events: none;
+  height: 0;
+}
+
+.tiptap:focus {
+  outline: none;
+}
+
 /* Scrollbar Styling */
 ::-webkit-scrollbar {
   width: 8px;

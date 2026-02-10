@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import {
   Select,
   SelectContent,
@@ -259,13 +259,16 @@ export function CreateDocumentDialog() {
                 <FormItem>
                   <FormLabel className="text-foreground/90">Content</FormLabel>
                   <FormControl>
-                    <Textarea
+                    <RichTextEditor
+                      content={field.value}
+                      onChange={field.onChange}
                       placeholder="Enter document content here..."
-                      className="min-h-[200px] bg-background/50 border-white/10 focus:border-primary/50 font-sans"
                       data-testid="textarea-content"
-                      {...field}
                     />
                   </FormControl>
+                  <FormDescription className="text-xs">
+                    Paste from Google Docs to preserve formatting, or use the toolbar above.
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}

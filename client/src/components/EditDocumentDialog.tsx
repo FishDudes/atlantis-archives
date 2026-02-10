@@ -21,7 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { RichTextEditor } from "@/components/RichTextEditor";
 import {
   Select,
   SelectContent,
@@ -233,10 +233,10 @@ export function EditDocumentDialog({ document }: EditDocumentDialogProps) {
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <Textarea
-                      className="min-h-[200px] bg-background/50 border-white/10"
+                    <RichTextEditor
+                      content={field.value}
+                      onChange={field.onChange}
                       data-testid="textarea-edit-content"
-                      {...field}
                     />
                   </FormControl>
                   <FormMessage />

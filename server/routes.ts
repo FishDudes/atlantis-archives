@@ -5,6 +5,11 @@ import { api } from "@shared/routes";
 import { z } from "zod";
 import { setupDiscordAuth, isAuthenticated } from "./discord-auth";
 import { DISCORD_ROLES, CATEGORY_ROLE_ACCESS } from "@shared/schema";
+import { JSDOM } from "jsdom";
+import DOMPurify from "dompurify";
+
+const window = new JSDOM("").window;
+const purify = DOMPurify(window as any);
 
 function hasAdminRole(roles: string[]): boolean {
   return DISCORD_ROLES.ADMIN_ROLES.some((r) => roles.includes(r));
@@ -83,12 +88,14 @@ export async function registerRoutes(
       let finalContent = input.content;
       
       if (input.googleDocUrl && !finalContent) {
-        finalContent = `<p>Document imported from Google Docs: <a href="${input.googleDocUrl}" target="_blank" class="text-primary hover:underline">${input.googleDocUrl}</a></p><p>Content will be rendered here maintaining formatting.</p>`;
+        finalContent = `<p>Document imported from Google Docs: <a href="${input.googleDocUrl}" target="_blank">${input.googleDocUrl}</a></p>`;
       }
+
+      const sanitizedContent = purify.sanitize(finalContent || "No content provided.");
 
       const docData = {
         ...input,
-        content: finalContent || "No content provided.",
+        content: sanitizedContent,
         authorId: user.id,
       };
 
@@ -122,7 +129,11 @@ export async function registerRoutes(
         return res.status(404).json({ message: "Document not found" });
       }
 
-      const updatedDoc = await storage.updateDocument(id, input);
+      const sanitizedInput = {
+        ...input,
+        ...(input.content ? { content: purify.sanitize(input.content) } : {}),
+      };
+      const updatedDoc = await storage.updateDocument(id, sanitizedInput);
       res.json(updatedDoc);
     } catch (err) {
       if (err instanceof z.ZodError) {

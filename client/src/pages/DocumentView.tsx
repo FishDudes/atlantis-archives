@@ -122,11 +122,11 @@ export default function DocumentView({ id }: Props) {
               </h1>
             </header>
 
-            <div className="prose prose-invert prose-lg max-w-none prose-headings:font-display prose-headings:text-primary prose-a:text-accent prose-blockquote:border-l-primary prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg">
-              <div className="whitespace-pre-wrap font-serif text-lg leading-relaxed text-foreground/90">
-                {document.content}
-              </div>
-            </div>
+            <div
+              className="prose prose-invert prose-lg max-w-none prose-headings:font-display prose-headings:text-primary prose-a:text-accent prose-blockquote:border-l-primary prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg prose-p:text-foreground/90 prose-li:text-foreground/90 prose-strong:text-foreground font-serif text-lg leading-relaxed"
+              data-testid="text-document-content"
+              dangerouslySetInnerHTML={{ __html: document.content }}
+            />
           </article>
         </div>
       </main>
