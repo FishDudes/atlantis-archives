@@ -5,9 +5,7 @@ import {
   type Document, 
   type InsertDocument, 
   type UpdateDocumentRequest,
-  users 
 } from "@shared/schema";
-import { authStorage } from "./replit_integrations/auth/storage"; // Import auth storage
 
 export interface IStorage {
   // Document operations
@@ -55,8 +53,8 @@ export class DatabaseStorage implements IStorage {
     return doc;
   }
 
-  async createDocument(doc: InsertDocument & { googleDocUrl?: string }): Promise<Document> {
-    const [newDoc] = await db.insert(documents).values(doc).returning();
+  async createDocument(doc: InsertDocument & { authorId: string; googleDocUrl?: string }): Promise<Document> {
+    const [newDoc] = await db.insert(documents).values(doc as any).returning();
     return newDoc;
   }
 

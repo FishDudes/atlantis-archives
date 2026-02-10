@@ -2,6 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Waves, Anchor, Ship } from "lucide-react";
+import { SiDiscord } from "react-icons/si";
 import { motion } from "framer-motion";
 
 export default function Landing() {
@@ -19,18 +20,15 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col bg-[#050A14]">
-      {/* Animated Background Gradients */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-900/20 blur-[100px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-cyan-900/20 blur-[100px]" />
         <div className="absolute top-[20%] right-[20%] w-[30%] h-[30%] rounded-full bg-teal-900/10 blur-[80px]" />
       </div>
 
-      {/* Grid Pattern Overlay */}
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
       
-      {/* Navigation */}
-      <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center">
+      <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
             <span className="font-display font-bold text-background text-lg">A</span>
@@ -38,15 +36,16 @@ export default function Landing() {
           <span className="font-display font-bold text-xl tracking-wider text-foreground">ATLANTIS</span>
         </div>
         <Button 
-          variant="ghost" 
+          variant="outline" 
           onClick={handleLogin}
-          className="text-foreground hover:text-primary hover:bg-white/5"
+          className="text-foreground border-[#5865F2]/40 bg-[#5865F2]/10"
+          data-testid="button-member-login"
         >
+          <SiDiscord className="w-4 h-4 mr-2" />
           Member Login
         </Button>
       </nav>
 
-      {/* Hero Section */}
       <main className="relative z-10 flex-1 flex flex-col items-center justify-center text-center px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -73,22 +72,24 @@ export default function Landing() {
             <Button 
               size="lg" 
               onClick={handleLogin}
-              className="h-14 px-8 rounded-full text-lg font-semibold bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_30px_-5px_rgba(6,182,212,0.4)] transition-all hover:scale-105"
+              className="h-14 px-8 rounded-full text-lg font-semibold bg-[#5865F2] text-white border-[#5865F2] shadow-[0_0_30px_-5px_rgba(88,101,242,0.4)] transition-all"
+              data-testid="button-enter-archive"
             >
-              Enter the Archive <ArrowRight className="ml-2 w-5 h-5" />
+              <SiDiscord className="mr-2 w-5 h-5" />
+              Login with Discord <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              className="h-14 px-8 rounded-full text-lg border-white/10 hover:bg-white/5 text-foreground"
+              className="h-14 px-8 rounded-full text-lg border-white/10 text-foreground"
               onClick={() => window.open("https://politicsandwar.com", "_blank")}
+              data-testid="button-alliance-portal"
             >
               Alliance Portal
             </Button>
           </div>
         </motion.div>
 
-        {/* Feature Grid */}
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

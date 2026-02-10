@@ -6,33 +6,26 @@ import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, Filter } from "lucide-react";
 import { useState } from "react";
-import { useParams } from "wouter";
+import { CATEGORIES } from "@shared/schema";
 
 export default function Dashboard() {
-  const { user, isLoading: authLoading } = useAuth();
-  const params = useParams(); // Using wouter hook (may be undefined if at root)
-  // Extract category from URL if present (e.g. /dashboard/intel)
-  // Wouter route is defined as /dashboard/:category?
-  // But params might be empty if match is /dashboard
-  
-  // Note: we'll handle routing logic in App.tsx to pass category prop or rely on URL structure
-  // Since wouter is simple, let's assume we parse window.location or use a specific Route component.
-  // Actually, simplest is to use wouter's Route parameter matching.
-  // Let's rely on the parent component or URL parsing.
+  const { user, isLoading: authLoading, isAdmin } = useAuth();
+
   const pathParts = window.location.pathname.split('/');
-  const categoryFilter = pathParts[2]; // /dashboard/intel -> intel
+  const categoryFilter = pathParts[2];
 
   const [search, setSearch] = useState("");
   
   const { data: documents, isLoading } = useDocuments({
     search: search || undefined,
-    category: categoryFilter, // undefined means "all"
+    category: categoryFilter,
     sortBy: "updated"
   });
 
   const getTitle = () => {
     if (!categoryFilter) return "All Archives";
-    return categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1);
+    const cat = CATEGORIES.find(c => c.value === categoryFilter);
+    return cat?.label || categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1);
   };
 
   if (authLoading) {
@@ -53,12 +46,11 @@ export default function Dashboard() {
       <Navigation />
       
       <main className="flex-1 lg:ml-72 min-h-screen flex flex-col">
-        {/* Header */}
         <header className="sticky top-0 z-20 px-8 py-6 bg-background/80 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
           <div>
-            <h1 className="font-display font-bold text-3xl text-foreground">{getTitle()}</h1>
+            <h1 className="font-display font-bold text-3xl text-foreground" data-testid="text-dashboard-title">{getTitle()}</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Welcome back, {user.firstName}. 
+              Welcome back, {user.discordUsername || user.firstName}. 
               {documents ? ` ${documents.length} records found.` : " Accessing database..."}
             </p>
           </div>
@@ -71,13 +63,13 @@ export default function Dashboard() {
                 className="pl-9 bg-card/50 border-white/10 focus:border-primary/50"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                data-testid="input-search"
               />
             </div>
             <CreateDocumentDialog />
           </div>
         </header>
 
-        {/* Content */}
         <div className="p-8 flex-1">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
