@@ -4,12 +4,23 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import Landing from "@/pages/Landing";
+import Dashboard from "@/pages/Dashboard";
+import DocumentView from "@/pages/DocumentView";
 
 function Router() {
   return (
     <Switch>
-      {/* Add pages below */}
-      {/* <Route path="/" component={Home}/> */}
+      {/* Public Landing */}
+      <Route path="/" component={Landing} />
+      
+      {/* Protected Routes */}
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/dashboard/:category" component={Dashboard} />
+      <Route path="/document/:id">
+        {(params) => <DocumentView id={parseInt(params.id)} />}
+      </Route>
+
       {/* Fallback to 404 */}
       <Route component={NotFound} />
     </Switch>
