@@ -5,6 +5,7 @@ import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import type { Editor } from "@tiptap/react";
 import { useEffect, useCallback, useRef } from "react";
 import {
   Bold,
@@ -83,6 +84,7 @@ export function RichTextEditor({
   "data-testid": testId,
 }: RichTextEditorProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<Editor | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -118,21 +120,17 @@ export function RichTextEditor({
           "min-h-[200px] w-full px-3 py-2 text-base text-foreground focus:outline-none md:text-sm prose prose-invert prose-sm max-w-none prose-headings:font-display prose-headings:text-primary prose-p:my-1 prose-li:my-0",
         "data-testid": testId || "richtext-editor",
       },
-      handlePaste: (view, event) => {
+      handlePaste: (_view, event) => {
         const items = event.clipboardData?.items;
         if (!items) return false;
 
         for (const item of Array.from(items)) {
-          if (item.type.startsWith("image/")) {
+          if (item.type.startsWith("image/") && item.kind === "file") {
             event.preventDefault();
             const file = item.getAsFile();
             if (file) {
               uploadImage(file).then((url) => {
-                view.dispatch(
-                  view.state.tr.replaceSelectionWith(
-                    view.state.schema.nodes.image.create({ src: url })
-                  )
-                );
+                editorRef.current?.chain().focus().setImage({ src: url }).run();
               }).catch(console.error);
             }
             return true;
@@ -144,11 +142,16 @@ export function RichTextEditor({
           const parser = new DOMParser();
           const doc = parser.parseFromString(html, "text/html");
           const images = doc.querySelectorAll("img");
+          const base64Images = Array.from(images).filter((img) => {
+            const src = img.getAttribute("src");
+            return src && src.startsWith("data:image/");
+          });
 
-          if (images.length > 0) {
-            images.forEach((img) => {
-              const src = img.getAttribute("src");
-              if (src && src.startsWith("data:image/")) {
+          if (base64Images.length > 0) {
+            event.preventDefault();
+            const uploadPromises = base64Images.map(async (img) => {
+              const src = img.getAttribute("src")!;
+              try {
                 const byteString = atob(src.split(",")[1]);
                 const mimeString = src.split(",")[0].split(":")[1].split(";")[0];
                 const ab = new ArrayBuffer(byteString.length);
@@ -158,17 +161,24 @@ export function RichTextEditor({
                 }
                 const blob = new Blob([ab], { type: mimeString });
                 const file = new File([blob], "pasted-image.png", { type: mimeString });
-                uploadImage(file).then((url) => {
-                  img.setAttribute("src", url);
-                }).catch(console.error);
+                const url = await uploadImage(file);
+                img.setAttribute("src", url);
+              } catch (err) {
+                console.error("Failed to upload pasted image:", err);
               }
             });
+
+            Promise.all(uploadPromises).then(() => {
+              const updatedHtml = doc.body.innerHTML;
+              editorRef.current?.commands.insertContent(updatedHtml);
+            });
+            return true;
           }
         }
 
         return false;
       },
-      handleDrop: (view, event) => {
+      handleDrop: (_view, event) => {
         const files = event.dataTransfer?.files;
         if (!files || files.length === 0) return false;
 
@@ -176,13 +186,10 @@ export function RichTextEditor({
         if (imageFiles.length === 0) return false;
 
         event.preventDefault();
-        const pos = view.posAtCoords({ left: event.clientX, top: event.clientY });
 
         imageFiles.forEach((file) => {
           uploadImage(file).then((url) => {
-            const node = view.state.schema.nodes.image.create({ src: url });
-            const tr = view.state.tr.insert(pos?.pos || view.state.selection.head, node);
-            view.dispatch(tr);
+            editorRef.current?.chain().focus().setImage({ src: url }).run();
           }).catch(console.error);
         });
 
@@ -190,6 +197,12 @@ export function RichTextEditor({
       },
     },
   });
+
+  useEffect(() => {
+    if (editor) {
+      editorRef.current = editor;
+    }
+  }, [editor]);
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {

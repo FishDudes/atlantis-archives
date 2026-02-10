@@ -93,6 +93,17 @@ Preferred communication style: Simple, everyday language.
   - `date-fns` — date formatting
   - `lucide-react` — icon library
   - `react-icons` — brand icons (Discord logo)
+  - `@tiptap/react` + `@tiptap/starter-kit` + extensions — Rich text editor (TipTap)
+  - `@tiptap/extension-image` — Image support in rich text editor
+  - `multer` — Image file upload handling
+  - `dompurify` + `jsdom` — Server-side HTML sanitization
+
+### Image Uploads
+- **Endpoint**: POST `/api/upload-image` (admin only, multipart form with "image" field, max 10MB)
+- **Storage**: Images stored in `./uploads/` directory, served statically at `/uploads/`
+- **Supported formats**: JPEG, PNG, GIF, WebP, SVG
+- **Editor integration**: TipTap Image extension with paste, drag-and-drop, and toolbar upload support
+- **Sanitization**: DOMPurify configured to allow `<img>` tags with src, alt, width, height, style attributes
 
 ## Discord Setup
 - **Redirect URL**: Must be configured in Discord Developer Portal → OAuth2 → Redirects: `https://<your-domain>/api/callback`
