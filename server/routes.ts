@@ -129,7 +129,7 @@ export async function registerRoutes(
       }
 
       const sanitizedContent = purify.sanitize(finalContent || "No content provided.", {
-        ADD_TAGS: ["img"],
+        ADD_TAGS: ["img", "span"],
         ADD_ATTR: ["src", "alt", "width", "height", "style"],
       });
 
@@ -172,7 +172,7 @@ export async function registerRoutes(
       const sanitizedInput = {
         ...input,
         ...(input.content ? { content: purify.sanitize(input.content, {
-          ADD_TAGS: ["img"],
+          ADD_TAGS: ["img", "span"],
           ADD_ATTR: ["src", "alt", "width", "height", "style"],
         }) } : {}),
       };

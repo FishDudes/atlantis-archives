@@ -1,10 +1,11 @@
-import { useEditor, EditorContent } from "@tiptap/react";
+import { useEditor, EditorContent, Extension } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import TextAlign from "@tiptap/extension-text-align";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
+import { TextStyle } from "@tiptap/extension-text-style";
 import type { Editor } from "@tiptap/react";
 import { useEffect, useCallback, useRef } from "react";
 import {
@@ -29,6 +30,67 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+declare module "@tiptap/core" {
+  interface Commands<ReturnType> {
+    fontSize: {
+      setFontSize: (size: string) => ReturnType;
+      unsetFontSize: () => ReturnType;
+    };
+  }
+}
+
+const FontSize = Extension.create({
+  name: "fontSize",
+  addOptions() {
+    return { types: ["textStyle"] };
+  },
+  addGlobalAttributes() {
+    return [
+      {
+        types: this.options.types,
+        attributes: {
+          fontSize: {
+            default: null,
+            parseHTML: (element) => element.style.fontSize?.replace(/['"]+/g, ""),
+            renderHTML: (attributes) => {
+              if (!attributes.fontSize) return {};
+              return { style: `font-size: ${attributes.fontSize}` };
+            },
+          },
+        },
+      },
+    ];
+  },
+  addCommands() {
+    return {
+      setFontSize:
+        (fontSize: string) =>
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontSize }).run(),
+      unsetFontSize:
+        () =>
+        ({ chain }) =>
+          chain().setMark("textStyle", { fontSize: null }).removeEmptyTextStyle().run(),
+    };
+  },
+});
+
+const FONT_SIZES = [
+  { label: "Small", value: "12px" },
+  { label: "Normal", value: "14px" },
+  { label: "Medium", value: "16px" },
+  { label: "Large", value: "20px" },
+  { label: "X-Large", value: "24px" },
+  { label: "Huge", value: "32px" },
+];
 
 interface RichTextEditorProps {
   content: string;
@@ -91,6 +153,8 @@ export function RichTextEditor({
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
       }),
+      TextStyle,
+      FontSize,
       Underline,
       TextAlign.configure({
         types: ["heading", "paragraph"],
@@ -306,6 +370,29 @@ export function RichTextEditor({
         >
           <Heading3 className="w-4 h-4" />
         </ToolbarButton>
+
+        <Select
+          value={editor.getAttributes("textStyle").fontSize || ""}
+          onValueChange={(value) => {
+            if (value === "default") {
+              editor.chain().focus().unsetFontSize().run();
+            } else {
+              editor.chain().focus().setFontSize(value).run();
+            }
+          }}
+        >
+          <SelectTrigger className="h-9 w-[90px] bg-transparent border-white/10 text-xs" data-testid="select-font-size">
+            <SelectValue placeholder="Size" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="default">Default</SelectItem>
+            {FONT_SIZES.map((size) => (
+              <SelectItem key={size.value} value={size.value}>
+                {size.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
         <Separator orientation="vertical" className="h-5 mx-1" />
 

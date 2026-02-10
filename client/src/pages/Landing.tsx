@@ -30,10 +30,13 @@ export default function Landing() {
       <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
       
       <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-            <span className="font-display font-bold text-background text-lg">A</span>
-          </div>
+        <div className="flex items-center gap-3">
+          <img
+            src={allianceLogo}
+            alt="Atlantis Alliance Logo"
+            className="w-10 h-10 rounded-lg object-cover"
+            data-testid="img-alliance-logo"
+          />
           <span className="font-display font-bold text-xl tracking-wider text-foreground">ATLANTIS</span>
         </div>
         <div className="flex items-center gap-3">
@@ -46,12 +49,6 @@ export default function Landing() {
             <SiDiscord className="w-4 h-4 mr-2" />
             Discord Server
           </Button>
-          <img
-            src={allianceLogo}
-            alt="Atlantis Alliance Logo"
-            className="w-10 h-10 rounded-lg object-cover"
-            data-testid="img-alliance-logo"
-          />
         </div>
       </nav>
 

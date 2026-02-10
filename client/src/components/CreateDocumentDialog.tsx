@@ -31,7 +31,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { Loader2, Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useQuery } from "@tanstack/react-query";
@@ -60,7 +59,6 @@ export function CreateDocumentDialog() {
       category: "guidelines",
       isPublic: false,
       allowedRoles: [] as string[],
-      googleDocUrl: "",
     },
   });
 
@@ -132,54 +130,30 @@ export function CreateDocumentDialog() {
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-foreground/90">Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="bg-background/50 border-white/10" data-testid="select-category">
-                          <SelectValue placeholder="Select a category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {CATEGORIES.map((cat) => (
-                          <SelectItem key={cat.value} value={cat.value} data-testid={`option-category-${cat.value}`}>
-                            {cat.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isPublic"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-center justify-between gap-1 rounded-lg border border-white/10 bg-background/50 p-3 shadow-sm">
-                    <div className="space-y-0.5">
-                      <FormLabel className="text-foreground/90">Public Access</FormLabel>
-                      <FormDescription className="text-xs">
-                        Visible to all members?
-                      </FormDescription>
-                    </div>
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-foreground/90">Category</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Switch
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        data-testid="switch-public"
-                      />
+                      <SelectTrigger className="bg-background/50 border-white/10" data-testid="select-category">
+                        <SelectValue placeholder="Select a category" />
+                      </SelectTrigger>
                     </FormControl>
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      {CATEGORIES.map((cat) => (
+                        <SelectItem key={cat.value} value={cat.value} data-testid={`option-category-${cat.value}`}>
+                          {cat.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
@@ -226,28 +200,6 @@ export function CreateDocumentDialog() {
                       )}
                     </div>
                   </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="googleDocUrl"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-foreground/90">Google Doc Link (Optional)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      placeholder="https://docs.google.com/document/d/..." 
-                      className="bg-background/50 border-white/10 focus:border-primary/50"
-                      data-testid="input-google-doc-url"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription className="text-xs">
-                    Link a public Google Doc to import its content.
-                  </FormDescription>
-                  <FormMessage />
                 </FormItem>
               )}
             />

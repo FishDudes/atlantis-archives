@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import allianceLogo from "@assets/BA10968C-16F4-46FB-979A-0295F2AAEEBC_1770762350945.JPEG";
 import {
   Sheet,
   SheetContent,
@@ -78,9 +79,12 @@ export function Navigation() {
     <div className="flex flex-col h-full">
       <div className="py-6 px-6 mb-4 border-b border-white/10">
         <Link href="/dashboard" className="flex items-center gap-3 group">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-accent flex items-center justify-center shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all duration-300">
-            <span className="text-primary-foreground font-display font-bold text-xl">A</span>
-          </div>
+          <img
+            src={allianceLogo}
+            alt="Atlantis Alliance Logo"
+            className="w-10 h-10 rounded-lg object-cover shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-all duration-300"
+            data-testid="img-nav-logo"
+          />
           <div>
             <h1 className="font-display font-bold text-xl tracking-wider text-primary uppercase" data-testid="text-app-title">ATLANTIS</h1>
           </div>
