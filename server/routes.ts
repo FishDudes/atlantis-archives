@@ -73,6 +73,10 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
+  app.get("/api/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: Date.now() });
+  });
+
   await setupDiscordAuth(app);
 
   app.get(api.documents.list.path, isAuthenticated, async (req, res) => {
