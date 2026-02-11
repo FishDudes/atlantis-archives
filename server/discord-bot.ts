@@ -26,6 +26,10 @@ export async function startDiscordBot() {
     return;
   }
 
+  log(`Using Client ID: ${clientId.substring(0, 6)}...${clientId.substring(clientId.length - 4)}`);
+  log(`Using Guild ID: ${guildId || "none (global registration)"}`);
+  log(`Client ID length: ${clientId.length}`);
+
   const command = new SlashCommandBuilder()
     .setName("atlantis")
     .setDescription("Get the link to the Atlantis Archive website");
