@@ -40,3 +40,8 @@ waitForPort = 5000
 
 [agent]
 integrations = ["javascript_log_in_with_replit:2.0.0"]
+
+[userenv]
+
+[userenv.shared]
+DISCORD_BOT_TOKEN = "MTQ3MDA2NjY3MDA4ODQ4Njk0Mg.G5f1U_.lRhDDGXA4fRKdePvQficyoy6L8yvDAlpg48SC8"
