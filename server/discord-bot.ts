@@ -10,11 +10,7 @@ function log(message: string) {
   console.log(`${formattedTime} [discord-bot] ${message}`);
 }
 
-const SITE_URL = process.env.REPLIT_DEV_DOMAIN
-  ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-  : process.env.REPL_SLUG
-    ? `https://${process.env.REPL_SLUG}.${process.env.REPL_OWNER}.repl.co`
-    : "https://atlantis-archive.replit.app";
+const SITE_URL = "https://atlantis-archive.replit.app";
 
 export async function startDiscordBot() {
   const token = process.env.DISCORD_BOT_TOKEN;
