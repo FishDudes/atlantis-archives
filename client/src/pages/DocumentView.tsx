@@ -61,14 +61,14 @@ export default function DocumentView({ id }: Props) {
       <main className="flex-1 lg:ml-72 min-h-screen flex flex-col relative">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="px-8 py-6 border-b border-white/5 flex items-center justify-between bg-background/50 backdrop-blur sticky top-0 z-20">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-white/5 flex items-center justify-between bg-background/50 backdrop-blur sticky top-0 z-20 pl-14 sm:pl-4 lg:pl-8">
           <Button 
             variant="ghost" 
             className="text-muted-foreground"
             onClick={() => window.history.back()}
             data-testid="button-back"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back
+            <ArrowLeft className="w-4 h-4 mr-1 sm:mr-2" /> <span className="hidden sm:inline">Back</span>
           </Button>
 
           <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export default function DocumentView({ id }: Props) {
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button variant="outline" size="sm" className="border-destructive/30 text-destructive" data-testid="button-delete-document">
-                      <Trash2 className="w-4 h-4 mr-2" /> Delete
+                      <Trash2 className="w-4 h-4 sm:mr-2" /> <span className="hidden sm:inline">Delete</span>
                     </Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="bg-card border-white/10 text-card-foreground">
@@ -105,9 +105,9 @@ export default function DocumentView({ id }: Props) {
           </div>
         </div>
 
-        <div className="flex-1 p-8 max-w-4xl mx-auto w-full">
-          <article className="space-y-8">
-            <header className="space-y-4 pb-8 border-b border-white/10">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full">
+          <article className="space-y-6 sm:space-y-8">
+            <header className="space-y-3 sm:space-y-4 pb-6 sm:pb-8 border-b border-white/10">
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
                   <Tag className="w-3 h-3" /> {categoryLabel}
@@ -117,7 +117,7 @@ export default function DocumentView({ id }: Props) {
                 </span>
               </div>
               
-              <h1 className="text-4xl md:text-5xl font-display font-bold leading-tight text-foreground" data-testid="text-document-title">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold leading-tight text-foreground" data-testid="text-document-title">
                 {document.title}
               </h1>
             </header>

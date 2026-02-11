@@ -34,25 +34,26 @@ export default function Landing() {
 
       <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-gradient-to-t from-[#030810] to-transparent" />
 
-      <nav className="relative z-10 w-full max-w-7xl mx-auto px-6 py-6 flex justify-between items-center flex-wrap gap-2">
-        <div className="flex items-center gap-3">
+      <nav className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 flex justify-between items-center flex-wrap gap-2">
+        <div className="flex items-center gap-2 sm:gap-3">
           <img
             src={allianceLogo}
             alt="Atlantis Alliance Logo"
-            className="w-10 h-10 rounded-lg object-cover"
+            className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover"
             data-testid="img-alliance-logo"
           />
-          <span className="font-display font-bold text-xl tracking-wider text-cyan-400">ATLANTIS ARCHIVES</span>
+          <span className="font-display font-bold text-base sm:text-xl tracking-wider text-cyan-400">ATLANTIS ARCHIVES</span>
         </div>
         <div className="flex items-center gap-3">
           <Button 
             variant="outline" 
             onClick={() => window.open("https://discord.gg/BA3TY4AAPf", "_blank")}
-            className="text-white border-[#5865F2]/50 bg-[#5865F2]/20 backdrop-blur-sm hover:shadow-[0_0_25px_0px_rgba(88,101,242,0.5)] transition-all duration-300"
+            className="text-white border-[#5865F2]/50 bg-[#5865F2]/20 backdrop-blur-sm hover:shadow-[0_0_25px_0px_rgba(88,101,242,0.5)] transition-all duration-300 text-sm sm:text-base"
             data-testid="button-discord-server"
           >
-            <SiDiscord className="w-4 h-4 mr-2" />
-            Discord Server
+            <SiDiscord className="w-4 h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Discord Server</span>
+            <span className="sm:hidden">Discord</span>
           </Button>
         </div>
       </nav>
@@ -69,20 +70,20 @@ export default function Landing() {
             <span className="text-sm font-medium text-cyan-300/90 tracking-wide uppercase">System Online</span>
           </div>
 
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight text-white mb-6 drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
+          <h1 className="text-4xl sm:text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight text-white mb-4 sm:mb-6 drop-shadow-[0_2px_20px_rgba(0,0,0,0.5)]">
             <span className="block text-gradient-ocean">Atlantis</span>
-            <span className="block text-4xl md:text-5xl lg:text-6xl text-blue-100/70 mt-2 font-serif italic drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">From the Depths, We Rise</span>
+            <span className="block text-2xl sm:text-4xl md:text-5xl lg:text-6xl text-blue-100/70 mt-1 sm:mt-2 font-serif italic drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)]">From the Depths, We Rise</span>
           </h1>
 
-          <p className="max-w-2xl mx-auto text-lg md:text-xl text-blue-100/60 font-light leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)]">
+          <p className="max-w-2xl mx-auto text-base sm:text-lg md:text-xl text-blue-100/60 font-light leading-relaxed drop-shadow-[0_1px_4px_rgba(0,0,0,0.5)] px-2">
             Welcome to the Atlantis Archives! Click the "Login with Discord" button below to get started. Any alliance or P&W information can be found here.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 pt-6 sm:pt-8 w-full px-2">
             <Button 
               size="lg" 
               onClick={handleLogin}
-              className="h-14 px-8 rounded-full text-lg font-semibold bg-[#5865F2] text-white border-[#5865F2] shadow-[0_0_20px_-5px_rgba(88,101,242,0.4)] hover:shadow-[0_0_35px_0px_rgba(88,101,242,0.7)] transition-all duration-300"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-full text-base sm:text-lg font-semibold bg-[#5865F2] text-white border-[#5865F2] shadow-[0_0_20px_-5px_rgba(88,101,242,0.4)] hover:shadow-[0_0_35px_0px_rgba(88,101,242,0.7)] transition-all duration-300 w-full sm:w-auto"
               data-testid="button-enter-archive"
             >
               <SiDiscord className="mr-2 w-5 h-5" />
@@ -91,7 +92,7 @@ export default function Landing() {
             <Button 
               size="lg" 
               variant="outline"
-              className="h-14 px-8 rounded-full text-lg border-white/20 text-white backdrop-blur-sm bg-white/5 shadow-[0_0_15px_-5px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_0px_rgba(6,182,212,0.4)] transition-all duration-300"
+              className="h-12 sm:h-14 px-6 sm:px-8 rounded-full text-base sm:text-lg border-white/20 text-white backdrop-blur-sm bg-white/5 shadow-[0_0_15px_-5px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_0px_rgba(6,182,212,0.4)] transition-all duration-300 w-full sm:w-auto"
               onClick={() => window.open("https://politicsandwar.com", "_blank")}
               data-testid="button-alliance-portal"
             >
@@ -104,7 +105,7 @@ export default function Landing() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5, duration: 1 }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-24 w-full max-w-4xl"
+          className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-8 mt-12 sm:mt-24 w-full max-w-4xl px-2"
         >
           {[
             { icon: Waves, title: "Deep Intel", desc: "Secure operational data storage" },

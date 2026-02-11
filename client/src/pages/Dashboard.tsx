@@ -46,10 +46,10 @@ export default function Dashboard() {
       <Navigation />
       
       <main className="flex-1 lg:ml-72 min-h-screen flex flex-col">
-        <header className="sticky top-0 z-20 px-8 py-6 bg-background/80 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
+        <header className="sticky top-0 z-20 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 bg-background/80 backdrop-blur-md border-b border-white/5 flex flex-col md:flex-row gap-3 sm:gap-4 items-start md:items-center justify-between pl-14 sm:pl-4 lg:pl-8">
           <div>
-            <h1 className="font-display font-bold text-3xl text-foreground" data-testid="text-dashboard-title">{getTitle()}</h1>
-            <p className="text-muted-foreground text-sm mt-1">
+            <h1 className="font-display font-bold text-2xl sm:text-3xl text-foreground" data-testid="text-dashboard-title">{getTitle()}</h1>
+            <p className="text-muted-foreground text-xs sm:text-sm mt-1">
               Welcome back, {user.discordUsername || user.firstName}. 
               {documents ? ` ${documents.length} records found.` : " Accessing database..."}
             </p>
@@ -70,7 +70,7 @@ export default function Dashboard() {
           </div>
         </header>
 
-        <div className="p-8 flex-1">
+        <div className="p-4 sm:p-6 lg:p-8 flex-1">
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="w-8 h-8 text-primary/50 animate-spin" />
