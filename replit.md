@@ -64,7 +64,7 @@ Preferred communication style: Simple, everyday language.
 - **Role definitions**: `shared/schema.ts` exports `DISCORD_ROLES`, `CATEGORY_ROLE_ACCESS`, and `CATEGORIES` constants
 
 ### Categories
-- Atlantis Guidelines, New Players, Internal Affairs, Foreign Affairs, Military, Economy, Technology, First Steps, Intelligence
+- Atlantis Guidelines, New Members, Internal Affairs, Foreign Affairs, Military, Economy, Technology, First Steps, Intelligence
 
 ### Storage Layer
 - `server/storage.ts` — `DatabaseStorage` class implementing `IStorage` interface for document CRUD

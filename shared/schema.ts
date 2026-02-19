@@ -8,7 +8,7 @@ export * from "./models/auth";
 export const CATEGORIES = [
   { value: "guidelines", label: "Atlantis Guidelines" },
   { value: "first-steps", label: "First Steps" },
-  { value: "new-players", label: "New Players" },
+  { value: "new-players", label: "New Members" },
   { value: "internal-affairs", label: "Internal Affairs" },
   { value: "foreign-affairs", label: "Foreign Affairs" },
   { value: "military", label: "Military" },

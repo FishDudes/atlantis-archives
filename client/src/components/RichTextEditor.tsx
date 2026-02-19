@@ -6,8 +6,9 @@ import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
+import { Color } from "@tiptap/extension-color";
 import type { Editor } from "@tiptap/react";
-import { useEffect, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef, useState } from "react";
 import {
   Bold,
   Italic,
@@ -27,6 +28,7 @@ import {
   Quote,
   Minus,
   ImagePlus,
+  Palette,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -37,6 +39,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
@@ -83,6 +90,182 @@ const FontSize = Extension.create({
   },
 });
 
+function parseAlignFromStyle(style: string | null): string | null {
+  if (!style) return null;
+  if (style.includes("margin-left: auto") && style.includes("margin-right: auto")) return "center";
+  if (style.includes("margin-left: auto") && !style.includes("margin-right: auto")) return "right";
+  return null;
+}
+
+function buildImageStyle(attrs: { width?: string; height?: string; align?: string }): string {
+  const parts: string[] = [];
+  if (attrs.width) parts.push(`width: ${attrs.width}`);
+  if (attrs.height) parts.push(`height: ${attrs.height}`);
+  if (attrs.align === "center") {
+    parts.push("margin-left: auto", "margin-right: auto", "display: block");
+  } else if (attrs.align === "right") {
+    parts.push("margin-left: auto", "display: block");
+  } else {
+    parts.push("display: block");
+  }
+  return parts.join("; ");
+}
+
+const ResizableImage = Image.extend({
+  addAttributes() {
+    return {
+      src: { default: null },
+      alt: { default: null },
+      title: { default: null },
+      width: {
+        default: null,
+        parseHTML: (element) => element.style.width || element.getAttribute("width") || null,
+      },
+      height: {
+        default: null,
+        parseHTML: (element) => element.style.height || element.getAttribute("height") || null,
+      },
+      align: {
+        default: null,
+        parseHTML: (element) => parseAlignFromStyle(element.getAttribute("style")),
+      },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    const { width, height, align, ...rest } = HTMLAttributes;
+    return ["img", {
+      ...rest,
+      style: buildImageStyle({ width, height, align }),
+    }];
+  },
+  addNodeView() {
+    return ({ node, getPos, editor }) => {
+      const container = document.createElement("div");
+      container.style.position = "relative";
+      container.style.maxWidth = "100%";
+
+      function applyContainerAlign(alignVal: string | null) {
+        if (alignVal === "center") {
+          container.style.marginLeft = "auto";
+          container.style.marginRight = "auto";
+          container.style.display = "block";
+          container.style.textAlign = "center";
+        } else if (alignVal === "right") {
+          container.style.marginLeft = "auto";
+          container.style.marginRight = "";
+          container.style.display = "block";
+          container.style.textAlign = "right";
+        } else {
+          container.style.marginLeft = "";
+          container.style.marginRight = "";
+          container.style.display = "block";
+          container.style.textAlign = "left";
+        }
+      }
+
+      applyContainerAlign(node.attrs.align);
+
+      const img = document.createElement("img");
+      img.src = node.attrs.src;
+      img.alt = node.attrs.alt || "";
+      img.className = "max-w-full h-auto rounded-md";
+      img.style.cursor = "pointer";
+      if (node.attrs.width) img.style.width = node.attrs.width;
+      if (node.attrs.height) img.style.height = node.attrs.height;
+      if (node.attrs.align === "center" || node.attrs.align === "right") {
+        img.style.display = "inline-block";
+      }
+
+      const toolbar = document.createElement("div");
+      toolbar.className = "image-toolbar";
+      toolbar.style.cssText = "display:none; position:absolute; top:-36px; left:50%; transform:translateX(-50%); background:hsl(var(--card)); border:1px solid hsl(var(--border)); border-radius:6px; padding:2px 4px; gap:2px; z-index:50; white-space:nowrap; box-shadow:0 2px 8px rgba(0,0,0,0.3);";
+
+      const sizes = [
+        { label: "S", width: "25%" },
+        { label: "M", width: "50%" },
+        { label: "L", width: "75%" },
+        { label: "Full", width: "100%" },
+      ];
+
+      const aligns = [
+        { label: "Left", value: "left", icon: "\u21D0" },
+        { label: "Center", value: "center", icon: "\u21D4" },
+        { label: "Right", value: "right", icon: "\u21D2" },
+      ];
+
+      sizes.forEach(({ label, width }) => {
+        const btn = document.createElement("button");
+        btn.textContent = label;
+        btn.type = "button";
+        btn.style.cssText = "padding:2px 8px; font-size:11px; border-radius:4px; border:none; cursor:pointer; color:hsl(var(--foreground)); background:transparent;";
+        btn.onmouseenter = () => { btn.style.background = "hsl(var(--accent))"; };
+        btn.onmouseleave = () => { btn.style.background = "transparent"; };
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof getPos === "function") {
+            editor.chain().focus().setNodeSelection(getPos()).updateAttributes("image", { width, height: "auto" }).run();
+          }
+        };
+        toolbar.appendChild(btn);
+      });
+
+      const sep = document.createElement("div");
+      sep.style.cssText = "width:1px; height:16px; background:hsl(var(--border)); margin:0 2px; align-self:center;";
+      toolbar.appendChild(sep);
+
+      aligns.forEach(({ label, value, icon }) => {
+        const btn = document.createElement("button");
+        btn.textContent = icon;
+        btn.title = label;
+        btn.type = "button";
+        btn.style.cssText = "padding:2px 6px; font-size:12px; border-radius:4px; border:none; cursor:pointer; color:hsl(var(--foreground)); background:transparent;";
+        btn.onmouseenter = () => { btn.style.background = "hsl(var(--accent))"; };
+        btn.onmouseleave = () => { btn.style.background = "transparent"; };
+        btn.onclick = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (typeof getPos === "function") {
+            editor.chain().focus().setNodeSelection(getPos()).updateAttributes("image", { align: value }).run();
+          }
+        };
+        toolbar.appendChild(btn);
+      });
+
+      img.onclick = () => {
+        toolbar.style.display = toolbar.style.display === "none" ? "flex" : "none";
+      };
+
+      const handleClickOutside = (e: MouseEvent) => {
+        if (!container.contains(e.target as Node)) {
+          toolbar.style.display = "none";
+        }
+      };
+      document.addEventListener("click", handleClickOutside);
+
+      container.appendChild(toolbar);
+      container.appendChild(img);
+
+      return {
+        dom: container,
+        destroy() {
+          document.removeEventListener("click", handleClickOutside);
+        },
+        update(updatedNode) {
+          if (updatedNode.type.name !== "image") return false;
+          img.src = updatedNode.attrs.src;
+          img.style.width = updatedNode.attrs.width || "";
+          img.style.height = updatedNode.attrs.height || "";
+          const newAlign = updatedNode.attrs.align;
+          applyContainerAlign(newAlign);
+          img.style.display = (newAlign === "center" || newAlign === "right") ? "inline-block" : "block";
+          return true;
+        },
+      };
+    };
+  },
+});
+
 const FONT_SIZES = [
   { label: "Small", value: "12px" },
   { label: "Normal", value: "14px" },
@@ -90,6 +273,30 @@ const FONT_SIZES = [
   { label: "Large", value: "20px" },
   { label: "X-Large", value: "24px" },
   { label: "Huge", value: "32px" },
+];
+
+const TEXT_COLORS = [
+  { label: "Default", value: "" },
+  { label: "White", value: "#ffffff" },
+  { label: "Light Gray", value: "#d1d5db" },
+  { label: "Gray", value: "#9ca3af" },
+  { label: "Red", value: "#ef4444" },
+  { label: "Orange", value: "#f97316" },
+  { label: "Amber", value: "#f59e0b" },
+  { label: "Yellow", value: "#eab308" },
+  { label: "Lime", value: "#84cc16" },
+  { label: "Green", value: "#22c55e" },
+  { label: "Emerald", value: "#10b981" },
+  { label: "Teal", value: "#14b8a6" },
+  { label: "Cyan", value: "#06b6d4" },
+  { label: "Sky", value: "#0ea5e9" },
+  { label: "Blue", value: "#3b82f6" },
+  { label: "Indigo", value: "#6366f1" },
+  { label: "Violet", value: "#8b5cf6" },
+  { label: "Purple", value: "#a855f7" },
+  { label: "Fuchsia", value: "#d946ef" },
+  { label: "Pink", value: "#ec4899" },
+  { label: "Rose", value: "#f43f5e" },
 ];
 
 interface RichTextEditorProps {
@@ -139,6 +346,58 @@ async function uploadImage(file: File): Promise<string> {
   return data.url;
 }
 
+function ColorPicker({ editor }: { editor: Editor }) {
+  const [open, setOpen] = useState(false);
+  const currentColor = editor.getAttributes("textStyle").color || "";
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          size="icon"
+          variant="ghost"
+          className="toggle-elevate relative"
+          title="Text Color"
+          data-testid="button-text-color"
+        >
+          <Palette className="w-4 h-4" />
+          <div
+            className="absolute bottom-1 left-1/2 -translate-x-1/2 h-0.5 w-4 rounded-full"
+            style={{ backgroundColor: currentColor || "hsl(var(--foreground))" }}
+          />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2" align="start" side="bottom">
+        <div className="grid grid-cols-7 gap-1">
+          {TEXT_COLORS.map((color) => (
+            <button
+              key={color.label}
+              type="button"
+              title={color.label}
+              className="w-6 h-6 rounded-md border border-white/10 flex items-center justify-center transition-transform hover:scale-110"
+              style={{ backgroundColor: color.value || "transparent" }}
+              onClick={() => {
+                if (!color.value) {
+                  editor.chain().focus().unsetColor().run();
+                } else {
+                  editor.chain().focus().setColor(color.value).run();
+                }
+                setOpen(false);
+              }}
+              data-testid={`button-color-${color.label.toLowerCase().replace(/\s/g, "-")}`}
+            >
+              {!color.value && (
+                <span className="text-xs text-foreground/70">A</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 export function RichTextEditor({
   content,
   onChange,
@@ -154,6 +413,7 @@ export function RichTextEditor({
         heading: { levels: [1, 2, 3] },
       }),
       TextStyle,
+      Color,
       FontSize,
       Underline,
       TextAlign.configure({
@@ -163,12 +423,9 @@ export function RichTextEditor({
         openOnClick: false,
         autolink: true,
       }),
-      Image.configure({
+      ResizableImage.configure({
         inline: false,
         allowBase64: true,
-        HTMLAttributes: {
-          class: "max-w-full h-auto rounded-md",
-        },
       }),
       Placeholder.configure({
         placeholder,
@@ -346,6 +603,8 @@ export function RichTextEditor({
         >
           <Strikethrough className="w-4 h-4" />
         </ToolbarButton>
+
+        <ColorPicker editor={editor} />
 
         <Separator orientation="vertical" className="h-5 mx-1" />
 

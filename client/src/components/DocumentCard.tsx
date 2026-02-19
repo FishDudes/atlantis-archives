@@ -4,6 +4,13 @@ import { Shield, Scroll, Globe, Lock, Clock, BookOpen, Users, Briefcase, Swords,
 import { type DocumentResponse, CATEGORIES } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
+function stripHtml(html: string): string {
+  const tmp = document.createElement("div");
+  tmp.innerHTML = html;
+  const text = tmp.textContent || tmp.innerText || "";
+  return text.trim().substring(0, 200) || "No content yet...";
+}
+
 interface DocumentCardProps {
   document: DocumentResponse;
 }
@@ -50,7 +57,7 @@ export function DocumentCard({ document }: DocumentCardProps) {
           </h3>
           
           <p className="text-sm text-muted-foreground mb-6 line-clamp-3 flex-grow font-sans">
-            {document.content.substring(0, 150)}...
+            {stripHtml(document.content)}
           </p>
 
           <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground/70 pt-4 border-t border-white/5">
