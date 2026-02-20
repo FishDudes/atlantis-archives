@@ -4,11 +4,26 @@ import { Shield, Scroll, Globe, Lock, Clock, BookOpen, Users, Briefcase, Swords,
 import { type DocumentResponse, CATEGORIES } from "@shared/schema";
 import { cn } from "@/lib/utils";
 
-function stripHtml(html: string): string {
+function getPreviewText(html: string, title: string): string {
   const tmp = document.createElement("div");
   tmp.innerHTML = html;
-  const text = tmp.textContent || tmp.innerText || "";
-  return text.trim().substring(0, 200) || "No content yet...";
+  const blocks = tmp.querySelectorAll("p, h1, h2, h3, h4, h5, h6, li, blockquote, div");
+  const lines: string[] = [];
+  blocks.forEach((el) => {
+    const t = (el.textContent || "").trim();
+    if (t) lines.push(t);
+  });
+  if (lines.length === 0) {
+    const plain = (tmp.textContent || "").trim();
+    return plain.substring(0, 200) || "No content yet...";
+  }
+  const titleNorm = title.trim().toLowerCase();
+  let startIdx = 0;
+  if (lines[0].toLowerCase() === titleNorm) {
+    startIdx = 1;
+  }
+  const preview = lines.slice(startIdx).join(" ").substring(0, 200);
+  return preview || "No content yet...";
 }
 
 interface DocumentCardProps {
@@ -57,7 +72,7 @@ export function DocumentCard({ document }: DocumentCardProps) {
           </h3>
           
           <p className="text-sm text-muted-foreground mb-6 line-clamp-3 flex-grow font-sans">
-            {stripHtml(document.content)}
+            {getPreviewText(document.content, document.title)}
           </p>
 
           <div className="flex items-center justify-between gap-1 text-xs text-muted-foreground/70 pt-4 border-t border-white/5">
