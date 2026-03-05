@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import allianceLogo from "@assets/BA10968C-16F4-46FB-979A-0295F2AAEEBC_1770762350945.JPEG";
+import allianceLogo from "@assets/2D8435ED-5485-402E-88AA-FD17A14FF73E_1772670220046.png";
 import {
   Sheet,
   SheetContent,

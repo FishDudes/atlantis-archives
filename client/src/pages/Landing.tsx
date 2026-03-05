@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Waves, Anchor, Footprints } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { motion } from "framer-motion";
-import allianceLogo from "@assets/BA10968C-16F4-46FB-979A-0295F2AAEEBC_1770762350945.JPEG";
+import allianceLogo from "@assets/2D8435ED-5485-402E-88AA-FD17A14FF73E_1772670220046.png";
 import atlantisBg from "@/assets/images/atlantis-bg.png";
 
 export default function Landing() {
