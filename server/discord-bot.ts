@@ -48,7 +48,7 @@ export async function startDiscordBot() {
     intents: [GatewayIntentBits.Guilds],
   });
 
-  client.on("ready", () => {
+  client.on("clientReady", () => {
     log(`Bot logged in as ${client.user?.tag}`);
   });
 
@@ -87,4 +87,16 @@ export async function startDiscordBot() {
   } catch (err) {
     log(`Failed to login Discord bot: ${err}`);
   }
+
+  const selfPingPort = process.env.PORT || "5000";
+  setInterval(async () => {
+    try {
+      const res = await fetch(`http://localhost:${selfPingPort}/api/health`);
+      if (res.ok) {
+        log("Self-ping OK");
+      }
+    } catch {
+      log("Self-ping failed");
+    }
+  }, 4 * 60 * 1000);
 }
