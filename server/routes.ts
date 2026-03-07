@@ -73,10 +73,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   
-  app.get("/", (_req, res) => {
-    res.send("Bot is running");
-  });
-
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok", timestamp: Date.now() });
   });

@@ -50,6 +50,7 @@ export async function startDiscordBot() {
 
   client.on("clientReady", () => {
     log(`Bot logged in as ${client.user?.tag}`);
+    log("Bot is running");
   });
 
   client.on("interactionCreate", async (interaction) => {
