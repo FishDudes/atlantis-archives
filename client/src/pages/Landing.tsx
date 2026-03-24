@@ -93,7 +93,7 @@ export default function Landing() {
               size="lg" 
               variant="outline"
               className="h-12 sm:h-14 px-6 sm:px-8 rounded-full text-base sm:text-lg border-white/20 text-white backdrop-blur-sm bg-white/5 shadow-[0_0_15px_-5px_rgba(255,255,255,0.1)] hover:shadow-[0_0_30px_0px_rgba(6,182,212,0.4)] transition-all duration-300 w-full sm:w-auto"
-              onClick={() => window.open("https://politicsandwar.com", "_blank")}
+              onClick={() => window.open("https://politicsandwar.com/alliance/id=14921", "_blank")}
               data-testid="button-alliance-portal"
             >
               Alliance Portal
