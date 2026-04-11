@@ -1,4 +1,4 @@
-import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder } from "discord.js";
+import { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, ActivityType } from "discord.js";
 
 function log(message: string) {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -10,7 +10,7 @@ function log(message: string) {
   console.log(`${formattedTime} [discord-bot] ${message}`);
 }
 
-const SITE_URL = "https://df3a8d23-837f-47de-8ed7-6f063e105505-00-1hrepdltis3n6.janeway.replit.dev";
+const SITE_URL = "https://atlantis-archive--fishbruc.replit.app";
 
 export async function startDiscordBot() {
   const token = process.env.DISCORD_BOT_TOKEN;
@@ -51,6 +51,9 @@ export async function startDiscordBot() {
   client.on("clientReady", () => {
     log(`Bot logged in as ${client.user?.tag}`);
     log("Bot is running");
+    client.user?.setActivity("Currently drowning in commands", {
+      type: ActivityType.Custom,
+    });
   });
 
   client.on("interactionCreate", async (interaction) => {

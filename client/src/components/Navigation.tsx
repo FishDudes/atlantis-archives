@@ -16,9 +16,13 @@ import {
   Cpu,
   Footprints,
   RefreshCw,
-  User
+  User,
+  Download,
+  Upload,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import allianceLogo from "@assets/2D8435ED-5485-402E-88AA-FD17A14FF73E_1772670220046.png";
 import {
@@ -46,6 +50,50 @@ export function Navigation() {
   const [location] = useLocation();
   const { user, logout, userRoles, isAdmin, refreshRoles, isRefreshingRoles } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleExport = async () => {
+    try {
+      const res = await fetch("/api/admin/export");
+      if (!res.ok) throw new Error("Export failed");
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `atlantis-archive-export-${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Export successful", description: "Documents downloaded as JSON." });
+    } catch {
+      toast({ title: "Export failed", variant: "destructive" });
+    }
+  };
+
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+      const res = await fetch("/api/admin/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.message || "Import failed");
+      await queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      toast({ title: "Import successful", description: result.message });
+    } catch (err: any) {
+      toast({ title: "Import failed", description: err.message, variant: "destructive" });
+    } finally {
+      setIsImporting(false);
+      if (importInputRef.current) importInputRef.current.value = "";
+    }
+  };
 
   const canAccessCategory = (categoryValue: string) => {
     if (isAdmin) return true;
@@ -143,6 +191,40 @@ export function Navigation() {
             <RefreshCw className={cn("w-4 h-4 text-muted-foreground", isRefreshingRoles && "animate-spin")} />
           </Button>
         </div>
+        {isAdmin && (
+          <div className="flex gap-2 mb-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 justify-center text-muted-foreground border-white/10 text-xs"
+              onClick={handleExport}
+              data-testid="button-export-docs"
+              title="Export all documents to JSON"
+            >
+              <Download className="w-3.5 h-3.5 mr-1" />
+              Export
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1 justify-center text-muted-foreground border-white/10 text-xs"
+              onClick={() => importInputRef.current?.click()}
+              disabled={isImporting}
+              data-testid="button-import-docs"
+              title="Import documents from JSON"
+            >
+              <Upload className="w-3.5 h-3.5 mr-1" />
+              {isImporting ? "Importing..." : "Import"}
+            </Button>
+            <input
+              ref={importInputRef}
+              type="file"
+              accept=".json"
+              className="hidden"
+              onChange={handleImportFile}
+            />
+          </div>
+        )}
         <Button 
           variant="outline" 
           className="w-full justify-start text-muted-foreground border-white/10"

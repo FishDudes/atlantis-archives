@@ -79,6 +79,59 @@ export async function registerRoutes(
 
   await setupDiscordAuth(app);
 
+  app.get("/api/admin/export", isAuthenticated, async (req, res) => {
+    const user = (req as any).user;
+    const userRoles: string[] = user.discordRoles || [];
+    const adminRoles = DISCORD_ROLES.ADMIN_ROLES as readonly string[];
+    if (!userRoles.some((r) => adminRoles.includes(r))) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const docs = await storage.getDocuments();
+    const exportData = docs.map((d) => ({
+      title: d.title,
+      content: d.content,
+      category: d.category,
+      isPublic: d.isPublic,
+      allowedRoles: d.allowedRoles,
+    }));
+    res.setHeader("Content-Disposition", `attachment; filename="atlantis-archive-export-${Date.now()}.json"`);
+    res.setHeader("Content-Type", "application/json");
+    res.json(exportData);
+  });
+
+  app.post("/api/admin/import", isAuthenticated, async (req, res) => {
+    const user = (req as any).user;
+    const userRoles: string[] = user.discordRoles || [];
+    const adminRoles = DISCORD_ROLES.ADMIN_ROLES as readonly string[];
+    if (!userRoles.some((r) => adminRoles.includes(r))) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    const importSchema = z.array(z.object({
+      title: z.string(),
+      content: z.string(),
+      category: z.string(),
+      isPublic: z.boolean().optional().default(false),
+      allowedRoles: z.array(z.string()).nullable().optional(),
+    }));
+    const parsed = importSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid import format", errors: parsed.error.errors });
+    }
+    let imported = 0;
+    for (const doc of parsed.data) {
+      await storage.createDocument({
+        title: doc.title,
+        content: doc.content,
+        category: doc.category,
+        isPublic: doc.isPublic ?? false,
+        allowedRoles: doc.allowedRoles ?? null,
+        authorId: user.id,
+      } as any);
+      imported++;
+    }
+    res.json({ message: `Successfully imported ${imported} documents`, imported });
+  });
+
   app.get(api.documents.list.path, isAuthenticated, async (req, res) => {
     const user = (req as any).user;
     const userRoles: string[] = user.discordRoles || [];
