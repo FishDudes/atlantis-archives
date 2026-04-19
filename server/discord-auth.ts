@@ -2,7 +2,7 @@ import crypto from "crypto";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
@@ -130,7 +130,7 @@ async function upsertDiscordUser(discordUser: DiscordUser, roles: string[]) {
 function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
+    pool: pool as any,
     createTableIfMissing: false,
     tableName: "sessions",
   });
