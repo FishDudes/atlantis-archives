@@ -6,6 +6,7 @@ import { rm, readFile } from "fs/promises";
 // which helps cold start times
 const allowlist = [
   "@google/generative-ai",
+  "@neondatabase/serverless",
   "axios",
   "connect-pg-simple",
   "cors",
@@ -31,6 +32,23 @@ const allowlist = [
   "zod",
   "zod-validation-error",
 ];
+
+async function wakeDatabase() {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+  try {
+    // Dynamically import so this only runs if the package is available
+    const { Pool, neonConfig } = await import("@neondatabase/serverless");
+    const wsModule = await import("ws");
+    neonConfig.webSocketConstructor = wsModule.default;
+    const pool = new Pool({ connectionString: dbUrl });
+    await pool.query("SELECT 1");
+    await pool.end();
+    console.log("Database woken up successfully.");
+  } catch (err) {
+    console.warn("Could not wake database (non-fatal):", err);
+  }
+}
 
 async function buildAll() {
   await rm("dist", { recursive: true, force: true });
@@ -59,6 +77,11 @@ async function buildAll() {
     external: externals,
     logLevel: "info",
   });
+
+  // Wake the production database so Replit's post-build schema check
+  // doesn't hit a suspended Neon endpoint.
+  console.log("Waking database before schema check...");
+  await wakeDatabase();
 }
 
 buildAll().catch((err) => {
