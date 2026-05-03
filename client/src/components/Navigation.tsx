@@ -19,6 +19,7 @@ import {
   User,
   Download,
   Upload,
+  MessageSquare,
 } from "lucide-react";
 import { useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -111,6 +112,7 @@ export function Navigation() {
       href: `/dashboard/${cat.value}`,
       icon: categoryIcons[cat.value] || ScrollText,
     })),
+    { name: "Query Archive", href: "/query", icon: MessageSquare },
   ];
 
   const isActive = (path: string) => {

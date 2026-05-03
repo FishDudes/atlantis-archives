@@ -1,0 +1,67 @@
+Build a lightweight query system for the Atlantis Archives that allows users to ask questions and receive answers based only on stored documents. Do NOT use any external AI or LLM APIs.
+
+Core Goal:
+Convert a user’s question into a search query, find the most relevant parts of documents, and return a clear, readable answer.
+
+System Design:
+
+1. Query Input
+- Accept a plain text question from the user.
+- Example: “What is our policy on raids?” or “When was the last alliance war?”
+
+2. Query Processing
+- Convert input to lowercase.
+- Remove punctuation.
+- Remove common stopwords (e.g., “the”, “is”, “and”, “what”, “when”).
+- Split into keywords.
+- Do NOT use AI—just basic text processing.
+
+3. Document Search
+- Each document has:
+  - title
+  - content (full text)
+- Search all documents for keyword matches.
+- Rank documents based on:
+  - Number of keyword matches
+  - Frequency of matches in the document
+- Select the top 3 most relevant documents.
+
+4. Relevant Text Extraction
+- From each selected document:
+  - Split content into sentences.
+  - Score each sentence based on how many keywords it contains.
+  - Select the top 1–2 highest scoring sentences per document.
+
+5. Answer Construction
+- Combine the selected sentences into a single response.
+- Remove duplicate or very similar sentences.
+- Keep the answer concise and readable.
+- Preserve original wording (no AI rewriting).
+
+6. Basic Intent Handling (Rule-Based)
+- If the query contains:
+  - “when” → prioritize sentences containing dates or numbers
+  - “who” → prioritize sentences with names (capitalized words)
+  - “how many/how much” → prioritize numbers
+- This should be done with simple pattern matching, not AI.
+
+7. Output Format
+- First line: direct answer (best matching sentence)
+- Then: 1–3 supporting sentences
+- Optionally include the document title in parentheses
+
+Example Output:
+“Our alliance raid policy requires approval before attacking inactive nations. (Policy Document)
+Additional details: Raids must target nations inactive for 7+ days. Violations may result in penalties.”
+
+8. Fallback Behavior
+- If no strong matches:
+  - Return: “No relevant information found in the archive.”
+
+Constraints:
+- Do NOT use AI APIs or machine learning models
+- Do NOT generate new information
+- Only extract and display what exists in documents
+
+Goal:
+A fast, simple, deterministic query system that feels like a chatbot but is actually keyword search + sentence extraction.

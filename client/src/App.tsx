@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import DocumentView from "@/pages/DocumentView";
+import QueryPage from "@/pages/QueryPage";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/document/:id">
         {(params) => <DocumentView id={parseInt(params.id)} />}
       </Route>
+      <Route path="/query" component={QueryPage} />
 
       {/* Fallback to 404 */}
       <Route component={NotFound} />

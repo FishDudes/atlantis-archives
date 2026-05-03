@@ -132,6 +132,156 @@ export async function registerRoutes(
     res.json({ message: `Successfully imported ${imported} documents`, imported });
   });
 
+  // ── Keyword Query Engine ─────────────────────────────────────────────────
+  const STOPWORDS = new Set([
+    "a","about","above","after","again","against","all","am","an","and","any",
+    "are","as","at","be","because","been","before","being","below","between",
+    "both","but","by","can","did","do","does","doing","down","during","each",
+    "few","for","from","further","get","had","has","have","having","he","her",
+    "here","him","himself","his","how","i","if","in","into","is","it","its",
+    "itself","just","me","more","most","my","myself","no","nor","not","now",
+    "of","off","on","once","only","or","other","our","out","over","own","s",
+    "same","she","should","so","some","such","t","than","that","the","their",
+    "them","then","there","these","they","this","those","through","to","too",
+    "under","until","up","us","very","was","we","were","what","when","where",
+    "which","while","who","whom","why","will","with","you","your","yours",
+  ]);
+
+  function stripHtmlText(html: string): string {
+    return html
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function extractKeywords(text: string): string[] {
+    return text
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length > 1 && !STOPWORDS.has(w));
+  }
+
+  function scoreDoc(keywords: string[], title: string, plainContent: string): number {
+    const titleLower = title.toLowerCase();
+    const contentLower = plainContent.toLowerCase();
+    let score = 0;
+    for (const kw of keywords) {
+      const titleMatches = (titleLower.match(new RegExp(kw, "g")) || []).length;
+      const contentMatches = (contentLower.match(new RegExp(kw, "g")) || []).length;
+      score += titleMatches * 3 + contentMatches;
+    }
+    return score;
+  }
+
+  function splitSentences(text: string): string[] {
+    return text
+      .split(/(?<=[.!?])\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 20);
+  }
+
+  function scoreSentence(sentence: string, keywords: string[], intent: string): number {
+    const lower = sentence.toLowerCase();
+    let score = 0;
+    for (const kw of keywords) {
+      score += (lower.match(new RegExp(kw, "g")) || []).length;
+    }
+    if (intent === "when" && /\b(\d{4}|\d+\s*(day|week|month|year|hour)|january|february|march|april|may|june|july|august|september|october|november|december)\b/i.test(sentence)) score += 2;
+    if (intent === "who" && /\b[A-Z][a-z]+\b/.test(sentence)) score += 2;
+    if (intent === "howmany" && /\b\d+\b/.test(sentence)) score += 2;
+    return score;
+  }
+
+  app.post("/api/query", isAuthenticated, async (req, res) => {
+    const { question } = req.body;
+    if (!question || typeof question !== "string") {
+      return res.status(400).json({ message: "question is required" });
+    }
+
+    const user = (req as any).user;
+    const userRoles: string[] = user.discordRoles || [];
+
+    const allDocs = await storage.getDocuments();
+    const accessibleDocs = allDocs.filter((doc) => canAccessDocument(userRoles, doc));
+
+    if (accessibleDocs.length === 0) {
+      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
+    }
+
+    const keywords = extractKeywords(question);
+    if (keywords.length === 0) {
+      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
+    }
+
+    const qLower = question.toLowerCase();
+    let intent = "general";
+    if (/\bwhen\b/.test(qLower)) intent = "when";
+    else if (/\bwho\b/.test(qLower)) intent = "who";
+    else if (/\bhow many\b|\bhow much\b/.test(qLower)) intent = "howmany";
+
+    const scored = accessibleDocs
+      .map((doc) => {
+        const plain = stripHtmlText(doc.content);
+        return { doc, plain, score: scoreDoc(keywords, doc.title, plain) };
+      })
+      .filter((d) => d.score > 0)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 3);
+
+    if (scored.length === 0) {
+      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
+    }
+
+    const resultSentences: { text: string; source: string }[] = [];
+
+    for (const { doc, plain } of scored) {
+      const sentences = splitSentences(plain);
+      const ranked = sentences
+        .map((s) => ({ s, sc: scoreSentence(s, keywords, intent) }))
+        .filter((x) => x.sc > 0)
+        .sort((a, b) => b.sc - a.sc)
+        .slice(0, 2);
+      for (const { s } of ranked) {
+        resultSentences.push({ text: s, source: doc.title });
+      }
+    }
+
+    if (resultSentences.length === 0) {
+      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
+    }
+
+    // Deduplicate similar sentences (>60% word overlap)
+    const unique: typeof resultSentences = [];
+    for (const item of resultSentences) {
+      const itemWords = new Set(item.text.toLowerCase().split(/\s+/));
+      const isDuplicate = unique.some((u) => {
+        const uWords = new Set(u.text.toLowerCase().split(/\s+/));
+        const intersection = [...itemWords].filter((w) => uWords.has(w)).length;
+        return intersection / Math.max(itemWords.size, uWords.size) > 0.6;
+      });
+      if (!isDuplicate) unique.push(item);
+    }
+
+    const primary = unique[0];
+    const supporting = unique.slice(1, 4);
+    const sources = [...new Set(unique.map((u) => u.source))];
+
+    const answer =
+      `${primary.text} (${primary.source})` +
+      (supporting.length > 0
+        ? `\n\nAdditional details: ${supporting.map((s) => s.text).join(" ")}`
+        : "");
+
+    res.json({ answer, sources });
+  });
+  // ─────────────────────────────────────────────────────────────────────────
+
   app.get(api.documents.list.path, isAuthenticated, async (req, res) => {
     const user = (req as any).user;
     const userRoles: string[] = user.discordRoles || [];
