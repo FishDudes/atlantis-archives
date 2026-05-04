@@ -159,6 +159,7 @@ export function AtlantisAI() {
             placeholder="Ask Atlantis AI anything about the archive..."
             className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed min-h-[36px] max-h-[120px] py-1"
             disabled={isQuerying}
+            maxLength={500}
             rows={1}
             data-testid="input-atlantis-ai"
           />
@@ -172,9 +173,19 @@ export function AtlantisAI() {
             {isQuerying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground/35 text-center mt-2">
-          Powered by DeepSeek · Answers sourced from archive documents
-        </p>
+        <div className="flex items-center justify-between mt-2 px-0.5">
+          <p className="text-xs text-muted-foreground/35">
+            Powered by DeepSeek · Answers sourced from archive documents
+          </p>
+          {question.length > 400 && (
+            <span className={cn(
+              "text-xs tabular-nums",
+              question.length >= 500 ? "text-red-400" : "text-amber-400/70"
+            )}>
+              {question.length}/500
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
