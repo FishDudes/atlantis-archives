@@ -238,27 +238,28 @@ export async function registerRoutes(
       return res.json({ answer: "No relevant information found in the archive.", sources: [] });
     }
 
-    const resultSentences: { text: string; source: string }[] = [];
+    // Collect all candidate sentences across top docs with their doc reference
+    const allCandidates: { text: string; score: number; docId: number; docTitle: string }[] = [];
 
     for (const { doc, plain } of scored) {
       const sentences = splitSentences(plain);
-      const ranked = sentences
-        .map((s) => ({ s, sc: scoreSentence(s, keywords, intent) }))
-        .filter((x) => x.sc > 0)
-        .sort((a, b) => b.sc - a.sc)
-        .slice(0, 2);
-      for (const { s } of ranked) {
-        resultSentences.push({ text: s, source: doc.title });
+      for (const s of sentences) {
+        const sc = scoreSentence(s, keywords, intent);
+        if (sc > 0) {
+          allCandidates.push({ text: s, score: sc, docId: doc.id, docTitle: doc.title });
+        }
       }
     }
 
-    if (resultSentences.length === 0) {
+    if (allCandidates.length === 0) {
       return res.json({ answer: "No relevant information found in the archive.", sources: [] });
     }
 
-    // Deduplicate similar sentences (>60% word overlap)
-    const unique: typeof resultSentences = [];
-    for (const item of resultSentences) {
+    // Sort globally by score, then deduplicate by >60% word overlap
+    allCandidates.sort((a, b) => b.score - a.score);
+
+    const unique: typeof allCandidates = [];
+    for (const item of allCandidates) {
       const itemWords = new Set(item.text.toLowerCase().split(/\s+/));
       const isDuplicate = unique.some((u) => {
         const uWords = new Set(u.text.toLowerCase().split(/\s+/));
@@ -268,17 +269,23 @@ export async function registerRoutes(
       if (!isDuplicate) unique.push(item);
     }
 
-    const primary = unique[0];
-    const supporting = unique.slice(1, 4);
-    const sources = [...new Set(unique.map((u) => u.source))];
+    // Take the top sentences and form a coherent answer paragraph
+    const selected = unique.slice(0, 5);
 
-    const answer =
-      `${primary.text} (${primary.source})` +
-      (supporting.length > 0
-        ? `\n\nAdditional details: ${supporting.map((s) => s.text).join(" ")}`
-        : "");
+    // Build a natural answer from the selected sentences
+    const bodyText = selected.map((s) => s.text.replace(/\s+/g, " ").trim()).join(" ");
 
-    res.json({ answer, sources });
+    // Collect unique source docs in order of first appearance
+    const seenIds = new Set<number>();
+    const sources: { id: number; title: string }[] = [];
+    for (const s of selected) {
+      if (!seenIds.has(s.docId)) {
+        seenIds.add(s.docId);
+        sources.push({ id: s.docId, title: s.docTitle });
+      }
+    }
+
+    res.json({ answer: bodyText, sources });
   });
   // ─────────────────────────────────────────────────────────────────────────
 

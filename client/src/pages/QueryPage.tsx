@@ -1,15 +1,21 @@
 import { useState, useRef, useEffect } from "react";
+import { Link } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigation } from "@/components/Navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Search, MessageSquare, BookOpen, TriangleAlert } from "lucide-react";
+import { Loader2, Search, MessageSquare, BookOpen, TriangleAlert, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+interface Source {
+  id: number;
+  title: string;
+}
 
 interface Message {
   type: "user" | "answer" | "error";
   text: string;
-  sources?: string[];
+  sources?: Source[];
 }
 
 export default function QueryPage() {
@@ -18,6 +24,11 @@ export default function QueryPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isQuerying, setIsQuerying] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    document.title = "Atlantis Assistant";
+    return () => { document.title = "Atlantis Archive"; };
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -80,10 +91,10 @@ export default function QueryPage() {
       <main className="flex-1 lg:ml-72 min-h-screen flex flex-col">
         <header className="sticky top-0 z-20 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 bg-background/80 backdrop-blur-md border-b border-white/5 pl-14 sm:pl-4 lg:pl-8">
           <h1 className="font-display font-bold text-2xl sm:text-3xl text-foreground">
-            Query the Archive
+            Atlantis Assistant
           </h1>
           <p className="text-muted-foreground text-xs sm:text-sm mt-1">
-            Ask a question and the system will search through all documents you have access to.
+            Ask a question and the assistant will find answers from documents you have access to.
           </p>
         </header>
 
@@ -95,10 +106,10 @@ export default function QueryPage() {
               </div>
               <div>
                 <h2 className="font-display font-semibold text-xl text-foreground mb-2">
-                  Ask the Archive
+                  Atlantis Assistant
                 </h2>
                 <p className="text-muted-foreground text-sm max-w-sm">
-                  Type a question below. The system will search through documents and extract the most relevant information.
+                  Ask any question and the assistant will search through archive documents to give you a direct answer.
                 </p>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2 w-full max-w-md">
@@ -155,22 +166,21 @@ export default function QueryPage() {
                     )}
                   >
                     {msg.type === "answer" ? (
-                      <div className="space-y-2">
-                        {msg.text.split("\n\n").map((part, pi) => (
-                          <p key={pi} className={pi === 1 ? "text-muted-foreground text-xs border-t border-white/10 pt-2 mt-2" : ""}>
-                            {part}
-                          </p>
-                        ))}
+                      <div className="space-y-3">
+                        <p className="leading-relaxed">{msg.text}</p>
                         {msg.sources && msg.sources.length > 0 && (
-                          <div className="flex flex-wrap gap-1 pt-2 border-t border-white/10 mt-2">
-                            <span className="text-xs text-muted-foreground">Sources:</span>
+                          <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
+                            <span className="text-xs text-muted-foreground self-center">Sources:</span>
                             {msg.sources.map((src) => (
-                              <span
-                                key={src}
-                                className="text-xs px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary"
+                              <Link
+                                key={src.id}
+                                href={`/document/${src.id}`}
+                                className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 hover:border-primary/40 transition-colors cursor-pointer"
+                                data-testid={`source-link-${src.id}`}
                               >
-                                {src}
-                              </span>
+                                {src.title}
+                                <ExternalLink className="w-2.5 h-2.5" />
+                              </Link>
                             ))}
                           </div>
                         )}
@@ -222,7 +232,7 @@ export default function QueryPage() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground/40 text-center mt-2">
-              Answers are extracted directly from archive documents — no AI generation.
+              Answers are pulled directly from archive documents. Click a source to read the full document.
             </p>
           </div>
         </div>
