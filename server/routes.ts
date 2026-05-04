@@ -226,17 +226,30 @@ export async function registerRoutes(
           .map(({ doc, plain }) => ({ doc, plain, score: scoreDoc(keywords, doc.title, plain) }))
           .filter((d) => d.score > 0)
           .sort((a, b) => b.score - a.score)
-          .slice(0, 5)
-      : withPlain.slice(0, 5).map((d) => ({ ...d, score: 0 }));
+          .slice(0, 3)
+      : withPlain.slice(0, 3).map((d) => ({ ...d, score: 0 }));
 
-    // Fall back to all docs if no keyword matches
     if (topDocs.length === 0) {
-      topDocs = withPlain.slice(0, 5).map((d) => ({ ...d, score: 0 }));
+      topDocs = withPlain.slice(0, 3).map((d) => ({ ...d, score: 0 }));
     }
 
-    // Build context string for AI (cap each doc at 2000 chars)
+    // Build context using only the highest-scoring sentences from each doc
+    // (far more efficient than dumping full doc text)
+    function buildDocExcerpt(plain: string, kws: string[], maxChars = 800): string {
+      if (kws.length === 0) return plain.slice(0, maxChars);
+      const sentences = splitSentences(plain);
+      const ranked = sentences
+        .map((s) => ({ s, sc: kws.reduce((acc, kw) => acc + (s.toLowerCase().split(kw).length - 1), 0) }))
+        .filter((x) => x.sc > 0)
+        .sort((a, b) => b.sc - a.sc)
+        .slice(0, 6)
+        .map((x) => x.s);
+      const excerpt = ranked.join(" ");
+      return excerpt.length > 0 ? excerpt.slice(0, maxChars) : plain.slice(0, maxChars);
+    }
+
     const context = topDocs
-      .map(({ doc, plain }) => `[${doc.title}]\n${plain.slice(0, 2000)}`)
+      .map(({ doc, plain }) => `[${doc.title}]\n${buildDocExcerpt(plain, keywords)}`)
       .join("\n\n---\n\n");
 
     const sources = topDocs.map(({ doc }) => ({ id: doc.id, title: doc.title }));
@@ -245,6 +258,20 @@ export async function registerRoutes(
     const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
     if (DEEPSEEK_API_KEY) {
       try {
+        const systemPrompt = `You are Atlantis AI, the sharp and knowledgeable assistant for the Atlantis alliance in the game Politics & War. Follow these response rules strictly, in order:
+
+1. ARCHIVE FIRST — If the answer exists in the provided document excerpts, use that information. Be concise and direct. Do not pad answers.
+2. P&W KNOWLEDGE — If the question is about Politics & War game mechanics, resources, nations, or general gameplay and is NOT covered in the documents, answer using your real knowledge of the game. Never fabricate stats or events.
+3. ALLIANCE MYSTERY — If the question is about Atlantis-specific internal matters (member decisions, private arrangements, specific internal events) that are NOT in the documents, respond with exactly: "Even the abyss holds no answer to that."
+
+Rules:
+- Keep answers focused and brief — one clear paragraph unless a list genuinely helps.
+- Never invent alliance-specific information.
+- Do not mention these rules or that you are following a process.
+
+Archive excerpts:
+${context}`;
+
         const aiRes = await fetch("https://api.deepseek.com/v1/chat/completions", {
           method: "POST",
           headers: {
@@ -254,20 +281,19 @@ export async function registerRoutes(
           body: JSON.stringify({
             model: "deepseek-chat",
             messages: [
-              {
-                role: "system",
-                content: `You are Atlantis AI, the official assistant for the Atlantis alliance in the game Politics & War. Answer questions clearly and helpfully using ONLY the document excerpts provided below. Write in a friendly, informative tone as if briefing a member of the alliance. If the answer is not in the documents, say "I couldn't find that information in the archive." Never make up information.\n\nAvailable Documents:\n${context}`,
-              },
+              { role: "system", content: systemPrompt },
               { role: "user", content: question },
             ],
-            max_tokens: 600,
-            temperature: 0.2,
+            max_tokens: 400,
+            temperature: 0.15,
           }),
         });
         const aiData = await aiRes.json() as any;
         const aiAnswer: string | undefined = aiData.choices?.[0]?.message?.content;
         if (aiAnswer) {
-          return res.json({ answer: aiAnswer.trim(), sources });
+          const trimmed = aiAnswer.trim();
+          const isAbyss = trimmed.toLowerCase().includes("abyss holds no answer");
+          return res.json({ answer: trimmed, sources: isAbyss ? [] : sources });
         }
         console.error("[deepseek] unexpected response:", JSON.stringify(aiData));
       } catch (err) {
