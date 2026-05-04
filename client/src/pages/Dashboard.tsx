@@ -3,6 +3,7 @@ import { useDocuments } from "@/hooks/use-documents";
 import { Navigation } from "@/components/Navigation";
 import { DocumentCard } from "@/components/DocumentCard";
 import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
+import { AtlantisAI } from "@/components/AtlantisAI";
 import { Input } from "@/components/ui/input";
 import { Search, Loader2, Filter } from "lucide-react";
 import { useState } from "react";
@@ -71,6 +72,7 @@ export default function Dashboard() {
         </header>
 
         <div className="p-4 sm:p-6 lg:p-8 flex-1">
+          {!categoryFilter && <AtlantisAI />}
           {isLoading ? (
             <div className="flex items-center justify-center h-64">
               <Loader2 className="w-8 h-8 text-primary/50 animate-spin" />

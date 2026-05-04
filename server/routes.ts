@@ -211,12 +211,74 @@ export async function registerRoutes(
     const accessibleDocs = allDocs.filter((doc) => canAccessDocument(userRoles, doc));
 
     if (accessibleDocs.length === 0) {
-      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
+      return res.json({ answer: "I couldn't find any documents in the archive you have access to.", sources: [] });
     }
 
+    // Score docs by keyword relevance
     const keywords = extractKeywords(question);
+    const withPlain = accessibleDocs.map((doc) => ({
+      doc,
+      plain: stripHtmlText(doc.content),
+    }));
+
+    let topDocs = keywords.length > 0
+      ? withPlain
+          .map(({ doc, plain }) => ({ doc, plain, score: scoreDoc(keywords, doc.title, plain) }))
+          .filter((d) => d.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 5)
+      : withPlain.slice(0, 5).map((d) => ({ ...d, score: 0 }));
+
+    // Fall back to all docs if no keyword matches
+    if (topDocs.length === 0) {
+      topDocs = withPlain.slice(0, 5).map((d) => ({ ...d, score: 0 }));
+    }
+
+    // Build context string for AI (cap each doc at 2000 chars)
+    const context = topDocs
+      .map(({ doc, plain }) => `[${doc.title}]\n${plain.slice(0, 2000)}`)
+      .join("\n\n---\n\n");
+
+    const sources = topDocs.map(({ doc }) => ({ id: doc.id, title: doc.title }));
+
+    // ── DeepSeek AI path ──────────────────────────────────────────────────
+    const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
+    if (DEEPSEEK_API_KEY) {
+      try {
+        const aiRes = await fetch("https://api.deepseek.com/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${DEEPSEEK_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "deepseek-chat",
+            messages: [
+              {
+                role: "system",
+                content: `You are Atlantis AI, the official assistant for the Atlantis alliance in the game Politics & War. Answer questions clearly and helpfully using ONLY the document excerpts provided below. Write in a friendly, informative tone as if briefing a member of the alliance. If the answer is not in the documents, say "I couldn't find that information in the archive." Never make up information.\n\nAvailable Documents:\n${context}`,
+              },
+              { role: "user", content: question },
+            ],
+            max_tokens: 600,
+            temperature: 0.2,
+          }),
+        });
+        const aiData = await aiRes.json() as any;
+        const aiAnswer: string | undefined = aiData.choices?.[0]?.message?.content;
+        if (aiAnswer) {
+          return res.json({ answer: aiAnswer.trim(), sources });
+        }
+        console.error("[deepseek] unexpected response:", JSON.stringify(aiData));
+      } catch (err) {
+        console.error("[deepseek] API error:", err);
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
+
+    // ── Keyword fallback ──────────────────────────────────────────────────
     if (keywords.length === 0) {
-      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
+      return res.json({ answer: "I couldn't find relevant information for that question in the archive.", sources: [] });
     }
 
     const qLower = question.toLowerCase();
@@ -225,67 +287,43 @@ export async function registerRoutes(
     else if (/\bwho\b/.test(qLower)) intent = "who";
     else if (/\bhow many\b|\bhow much\b/.test(qLower)) intent = "howmany";
 
-    const scored = accessibleDocs
-      .map((doc) => {
-        const plain = stripHtmlText(doc.content);
-        return { doc, plain, score: scoreDoc(keywords, doc.title, plain) };
-      })
-      .filter((d) => d.score > 0)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3);
-
-    if (scored.length === 0) {
-      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
-    }
-
-    // Collect all candidate sentences across top docs with their doc reference
     const allCandidates: { text: string; score: number; docId: number; docTitle: string }[] = [];
-
-    for (const { doc, plain } of scored) {
-      const sentences = splitSentences(plain);
-      for (const s of sentences) {
+    for (const { doc, plain } of topDocs) {
+      for (const s of splitSentences(plain)) {
         const sc = scoreSentence(s, keywords, intent);
-        if (sc > 0) {
-          allCandidates.push({ text: s, score: sc, docId: doc.id, docTitle: doc.title });
-        }
+        if (sc > 0) allCandidates.push({ text: s, score: sc, docId: doc.id, docTitle: doc.title });
       }
     }
 
     if (allCandidates.length === 0) {
-      return res.json({ answer: "No relevant information found in the archive.", sources: [] });
+      return res.json({ answer: "I couldn't find relevant information for that question in the archive.", sources: [] });
     }
 
-    // Sort globally by score, then deduplicate by >60% word overlap
     allCandidates.sort((a, b) => b.score - a.score);
-
     const unique: typeof allCandidates = [];
     for (const item of allCandidates) {
       const itemWords = new Set(item.text.toLowerCase().split(/\s+/));
-      const isDuplicate = unique.some((u) => {
+      const isDup = unique.some((u) => {
         const uWords = new Set(u.text.toLowerCase().split(/\s+/));
-        const intersection = [...itemWords].filter((w) => uWords.has(w)).length;
-        return intersection / Math.max(itemWords.size, uWords.size) > 0.6;
+        const inter = [...itemWords].filter((w) => uWords.has(w)).length;
+        return inter / Math.max(itemWords.size, uWords.size) > 0.6;
       });
-      if (!isDuplicate) unique.push(item);
+      if (!isDup) unique.push(item);
     }
 
-    // Take the top sentences and form a coherent answer paragraph
     const selected = unique.slice(0, 5);
-
-    // Build a natural answer from the selected sentences
-    const bodyText = selected.map((s) => s.text.replace(/\s+/g, " ").trim()).join(" ");
-
-    // Collect unique source docs in order of first appearance
+    const bodyText = selected.map((s) => s.text.trim()).join(" ");
+    const fallbackSources: { id: number; title: string }[] = [];
     const seenIds = new Set<number>();
-    const sources: { id: number; title: string }[] = [];
     for (const s of selected) {
       if (!seenIds.has(s.docId)) {
         seenIds.add(s.docId);
-        sources.push({ id: s.docId, title: s.docTitle });
+        fallbackSources.push({ id: s.docId, title: s.docTitle });
       }
     }
 
-    res.json({ answer: bodyText, sources });
+    res.json({ answer: bodyText, sources: fallbackSources });
+    // ─────────────────────────────────────────────────────────────────────
   });
   // ─────────────────────────────────────────────────────────────────────────
 

@@ -112,7 +112,6 @@ export function Navigation() {
       href: `/dashboard/${cat.value}`,
       icon: categoryIcons[cat.value] || ScrollText,
     })),
-    { name: "Query Archive", href: "/query", icon: MessageSquare },
   ];
 
   const isActive = (path: string) => {
