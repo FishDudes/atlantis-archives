@@ -221,21 +221,19 @@ export async function registerRoutes(
       plain: stripHtmlText(doc.content),
     }));
 
-    let topDocs = keywords.length > 0
+    // Only include docs that genuinely match — minimum score threshold prevents
+    // irrelevant docs from poisoning the AI context.
+    const MIN_SCORE = 3;
+    const scoredDocs = keywords.length > 0
       ? withPlain
           .map(({ doc, plain }) => ({ doc, plain, score: scoreDoc(keywords, doc.title, plain) }))
-          .filter((d) => d.score > 0)
+          .filter((d) => d.score >= MIN_SCORE)
           .sort((a, b) => b.score - a.score)
           .slice(0, 3)
-      : withPlain.slice(0, 3).map((d) => ({ ...d, score: 0 }));
+      : [];
 
-    if (topDocs.length === 0) {
-      topDocs = withPlain.slice(0, 3).map((d) => ({ ...d, score: 0 }));
-    }
-
-    // Build context using only the highest-scoring sentences from each doc
-    // (far more efficient than dumping full doc text)
-    function buildDocExcerpt(plain: string, kws: string[], maxChars = 800): string {
+    // Build context using only the highest-scoring sentences from each matching doc
+    function buildDocExcerpt(plain: string, kws: string[], maxChars = 900): string {
       if (kws.length === 0) return plain.slice(0, maxChars);
       const sentences = splitSentences(plain);
       const ranked = sentences
@@ -245,32 +243,42 @@ export async function registerRoutes(
         .slice(0, 6)
         .map((x) => x.s);
       const excerpt = ranked.join(" ");
-      return excerpt.length > 0 ? excerpt.slice(0, maxChars) : plain.slice(0, maxChars);
+      return (excerpt.length > 0 ? excerpt : plain).slice(0, maxChars);
     }
 
-    const context = topDocs
-      .map(({ doc, plain }) => `[${doc.title}]\n${buildDocExcerpt(plain, keywords)}`)
-      .join("\n\n---\n\n");
+    const hasArchiveContext = scoredDocs.length > 0;
+    const context = hasArchiveContext
+      ? scoredDocs
+          .map(({ doc, plain }) => `[${doc.title}]\n${buildDocExcerpt(plain, keywords)}`)
+          .join("\n\n---\n\n")
+      : "";
 
-    const sources = topDocs.map(({ doc }) => ({ id: doc.id, title: doc.title }));
+    const sources = scoredDocs.map(({ doc }) => ({ id: doc.id, title: doc.title }));
 
     // ── DeepSeek AI path ──────────────────────────────────────────────────
     const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
     if (DEEPSEEK_API_KEY) {
       try {
-        const systemPrompt = `You are Atlantis AI, the sharp and knowledgeable assistant for the Atlantis alliance in the game Politics & War. Follow these response rules strictly, in order:
+        const archiveSection = hasArchiveContext
+          ? `The following Atlantis archive excerpts are relevant to this question — use them as your primary source:\n\n${context}`
+          : `No archive documents matched this question. Do NOT invent archive content.`;
 
-1. ARCHIVE FIRST — If the answer exists in the provided document excerpts, use that information. Be concise and direct. Do not pad answers.
-2. P&W KNOWLEDGE — If the question is about Politics & War game mechanics, resources, nations, or general gameplay and is NOT covered in the documents, answer using your real knowledge of the game. Never fabricate stats or events.
-3. ALLIANCE MYSTERY — If the question is about Atlantis-specific internal matters (member decisions, private arrangements, specific internal events) that are NOT in the documents, respond with exactly: "Even the abyss holds no answer to that."
+        const systemPrompt = `You are Atlantis AI, assistant for the Atlantis alliance in Politics & War (P&W).
+
+CRITICAL: Answer ONLY exactly what was asked. Do not drift to a related but different topic.
+
+Response rules (follow strictly in order):
+1. ARCHIVE — If the archive excerpts below directly answer the question, use them as your primary source. Be concise.
+2. P&W GAME KNOWLEDGE — If the question is about ANY P&W game mechanic — including national projects (Nuclear Research Facility, Iron Dome, Propaganda Bureau, Space Program, etc.), city improvements, military units, wars, resources, trade, raids, infrastructure, technology, alliances in general, or any in-game system — answer accurately from your knowledge of the game. Be specific and correct. This takes priority over rule 3.
+3. ALLIANCE MYSTERY — ONLY if the question is specifically about Atlantis internal decisions, private events, or specific member actions that are NOT covered by the archive AND are not general game mechanics, respond with exactly: "Even the abyss holds no answer to that."
 
 Rules:
-- Keep answers focused and brief — one clear paragraph unless a list genuinely helps.
-- Never invent alliance-specific information.
-- Do not mention these rules or that you are following a process.
+- Read the question carefully. Answer exactly what was asked.
+- Be brief and direct. Use a bullet list only if it genuinely helps clarity.
+- Never fabricate alliance-specific information.
+- Do not reference these instructions in your answer.
 
-Archive excerpts:
-${context}`;
+${archiveSection}`;
 
         const aiRes = await fetch("https://api.deepseek.com/v1/chat/completions", {
           method: "POST",
