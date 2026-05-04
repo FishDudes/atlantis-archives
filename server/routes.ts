@@ -215,41 +215,77 @@ export async function registerRoutes(
     }
 
     // Score docs by keyword relevance
-    const keywords = extractKeywords(question);
+    let keywords = extractKeywords(question);
+
+    // ── Topic expansion for P&W national projects ─────────────────────────
+    // If the question names a known national project (or "project" / "build order"),
+    // also inject "project" and "national" so the alliance priority-guide docs
+    // are found even when their text doesn't repeat the exact project name.
+    const PW_NATIONAL_PROJECTS = [
+      "intelligence agency", "propaganda bureau", "activity center",
+      "center for civil engineering", "cce", "recycling initiative",
+      "advanced engineering corps", "arms stockpile", "bauxite works",
+      "emergency gasoline reserve", "ironworks", "uranium enrichment",
+      "mass irrigation", "international trade center", "itc",
+      "clinical research center", "vital defense", "iron dome",
+      "missile launch pad", "space program", "green tech", "spy satellite",
+      "spy sat", "telecom sat", "telecommunications satellite",
+      "nuclear research facility", "nrf", "propaganda", "arable land agency",
+    ];
+    const questionLower = question.toLowerCase();
+    const mentionsProject =
+      PW_NATIONAL_PROJECTS.some((p) => questionLower.includes(p)) ||
+      questionLower.includes("national project") ||
+      questionLower.includes("build order") ||
+      questionLower.includes("build guide");
+
+    if (mentionsProject) {
+      for (const extra of ["national", "project", "phase", "recommended", "build"]) {
+        if (!keywords.includes(extra)) keywords.push(extra);
+      }
+    }
+
     const withPlain = accessibleDocs.map((doc) => ({
       doc,
       plain: stripHtmlText(doc.content),
     }));
 
-    // Only include docs that genuinely match — minimum score threshold prevents
-    // irrelevant docs from poisoning the AI context.
-    const MIN_SCORE = 3;
+    // Lower threshold to 1 so any keyword overlap surfaces the doc;
+    // topic expansion above ensures priority-guide docs always score well
+    // for national-project questions.
+    const MIN_SCORE = 1;
     const scoredDocs = keywords.length > 0
       ? withPlain
           .map(({ doc, plain }) => ({ doc, plain, score: scoreDoc(keywords, doc.title, plain) }))
           .filter((d) => d.score >= MIN_SCORE)
           .sort((a, b) => b.score - a.score)
-          .slice(0, 3)
+          .slice(0, 4)
       : [];
 
-    // Build context using only the highest-scoring sentences from each matching doc
-    function buildDocExcerpt(plain: string, kws: string[], maxChars = 900): string {
+    // Build context using only the highest-scoring sentences from each matching doc.
+    // For national-project questions the full priority list matters, so we allow
+    // up to 1500 chars and up to 10 sentences from the best-matching doc.
+    function buildDocExcerpt(plain: string, kws: string[], maxChars = 1100, maxSentences = 8): string {
       if (kws.length === 0) return plain.slice(0, maxChars);
       const sentences = splitSentences(plain);
       const ranked = sentences
         .map((s) => ({ s, sc: kws.reduce((acc, kw) => acc + (s.toLowerCase().split(kw).length - 1), 0) }))
         .filter((x) => x.sc > 0)
         .sort((a, b) => b.sc - a.sc)
-        .slice(0, 6)
+        .slice(0, maxSentences)
         .map((x) => x.s);
       const excerpt = ranked.join(" ");
       return (excerpt.length > 0 ? excerpt : plain).slice(0, maxChars);
     }
 
     const hasArchiveContext = scoredDocs.length > 0;
+    // Give the top-scoring doc a bigger excerpt (1500 chars) so full priority
+    // lists are preserved; subsequent docs get the standard 900 chars.
     const context = hasArchiveContext
       ? scoredDocs
-          .map(({ doc, plain }) => `[${doc.title}]\n${buildDocExcerpt(plain, keywords)}`)
+          .map(({ doc, plain }, i) =>
+            `[${doc.title}]\n${buildDocExcerpt(plain, keywords, i === 0 ? 1500 : 900)}`
+          )
           .join("\n\n---\n\n")
       : "";
 
@@ -268,13 +304,14 @@ export async function registerRoutes(
 CRITICAL: Answer ONLY exactly what was asked. Do not drift to a related but different topic.
 
 Response rules (follow strictly in order):
-1. ARCHIVE — If the archive excerpts below directly answer the question, use them as your primary source. Be concise.
-2. P&W GAME KNOWLEDGE — If the question is about ANY P&W game mechanic — including national projects (Nuclear Research Facility, Iron Dome, Propaganda Bureau, Space Program, etc.), city improvements, military units, wars, resources, trade, raids, infrastructure, technology, alliances in general, or any in-game system — answer accurately from your knowledge of the game. Be specific and correct. This takes priority over rule 3.
-3. ALLIANCE MYSTERY — ONLY if the question is specifically about Atlantis internal decisions, private events, or specific member actions that are NOT covered by the archive AND are not general game mechanics, respond with exactly: "Even the abyss holds no answer to that."
+1. ARCHIVE FIRST — Read the archive excerpts carefully. If they contain guidance that applies to the question — even indirectly (e.g., a build order, phased priority list, or recommendation that includes or precedes what was asked) — use that as your answer. Atlantis's own recommendations always override general game knowledge. Explicitly cite what phase or priority order the archive recommends.
+2. P&W GAME KNOWLEDGE — Only if the archive has no relevant guidance at all: answer from your accurate knowledge of the game. Be specific and correct. This covers national projects, city improvements, military, wars, resources, raids, infrastructure, technology, etc.
+3. ALLIANCE MYSTERY — Only if the question is about Atlantis-specific internal matters (private decisions, specific member actions, internal events) that are not in the archive and not general game mechanics, respond with exactly: "Even the abyss holds no answer to that."
 
 Rules:
 - Read the question carefully. Answer exactly what was asked.
-- Be brief and direct. Use a bullet list only if it genuinely helps clarity.
+- If the archive contains a phased priority list (Phase 1, Phase 2, Phase 3, etc.) that covers the topic, state where the asked item falls in that order and what should come first.
+- Be concise. Use a bullet list only if it genuinely helps clarity.
 - Never fabricate alliance-specific information.
 - Do not reference these instructions in your answer.
 
