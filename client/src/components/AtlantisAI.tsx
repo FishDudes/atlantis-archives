@@ -12,11 +12,14 @@ export function AtlantisAI() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isQuerying, setIsQuerying] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Scroll inside the messages container only — never the whole page
   useEffect(() => {
-    if (expanded) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (expanded && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
   }, [messages, expanded]);
 
   const handleQuery = async () => {
@@ -25,7 +28,9 @@ export function AtlantisAI() {
     setExpanded(true);
     setMessages((prev) => [...prev, { type: "user", text: q }]);
     setQuestion("");
-    if (textareaRef.current) textareaRef.current.style.height = "auto";
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+    }
     setIsQuerying(true);
     try {
       const res = await fetch("/api/query", {
@@ -77,15 +82,20 @@ export function AtlantisAI() {
         )}
       </div>
 
-      {/* Message history */}
+      {/* Message history — scrolls internally, never moves the page */}
       {expanded && messages.length > 0 && (
-        <div className="max-h-80 overflow-y-auto px-5 py-4 space-y-4 border-b border-white/5">
+        <div
+          ref={messagesContainerRef}
+          className="max-h-80 overflow-y-auto px-5 py-4 space-y-4 border-b border-white/5"
+        >
           {messages.map((msg, i) => (
             <div key={i} className={cn("flex gap-2.5", msg.type === "user" ? "justify-end" : "justify-start")}>
               {msg.type !== "user" && (
                 <div className={cn(
                   "w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center mt-0.5",
-                  msg.type === "error" ? "bg-red-500/15 border border-red-500/20" : "bg-gradient-to-br from-purple-600/30 to-cyan-500/30 border border-purple-500/20"
+                  msg.type === "error"
+                    ? "bg-red-500/15 border border-red-500/20"
+                    : "bg-gradient-to-br from-purple-600/30 to-cyan-500/30 border border-purple-500/20"
                 )}>
                   <Sparkles className={cn("w-3 h-3", msg.type === "error" ? "text-red-400" : "text-cyan-400")} />
                 </div>
@@ -123,6 +133,7 @@ export function AtlantisAI() {
               </div>
             </div>
           ))}
+
           {isQuerying && (
             <div className="flex gap-2.5 justify-start">
               <div className="w-6 h-6 rounded-md flex-shrink-0 flex items-center justify-center bg-gradient-to-br from-purple-600/30 to-cyan-500/30 border border-purple-500/20">
@@ -134,35 +145,32 @@ export function AtlantisAI() {
               </div>
             </div>
           )}
-          <div ref={bottomRef} />
         </div>
       )}
 
-      {/* Input area with animated glow */}
+      {/* Input with animated multi-color glow on hover/focus */}
       <div className="px-4 py-3">
-        <div className="ai-glow-wrapper">
-          <div className="ai-glow-inner flex items-end gap-2 px-3 py-2">
-            <textarea
-              ref={textareaRef}
-              value={question}
-              onChange={handleInput}
-              onKeyDown={handleKeyDown}
-              placeholder="Ask Atlantis AI anything about the archive..."
-              className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed min-h-[36px] max-h-[120px] py-1"
-              disabled={isQuerying}
-              rows={1}
-              data-testid="input-atlantis-ai"
-            />
-            <Button
-              onClick={handleQuery}
-              disabled={!question.trim() || isQuerying}
-              size="sm"
-              className="h-8 w-8 p-0 flex-shrink-0 bg-gradient-to-br from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 border-0 shadow-lg shadow-purple-500/20"
-              data-testid="button-atlantis-ai-submit"
-            >
-              {isQuerying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            </Button>
-          </div>
+        <div className="ai-glow-input flex items-end gap-2 px-3 py-2 bg-card/60 border border-white/10 rounded-xl">
+          <textarea
+            ref={textareaRef}
+            value={question}
+            onChange={handleInput}
+            onKeyDown={handleKeyDown}
+            placeholder="Ask Atlantis AI anything about the archive..."
+            className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed min-h-[36px] max-h-[120px] py-1"
+            disabled={isQuerying}
+            rows={1}
+            data-testid="input-atlantis-ai"
+          />
+          <Button
+            onClick={handleQuery}
+            disabled={!question.trim() || isQuerying}
+            size="sm"
+            className="h-8 w-8 p-0 flex-shrink-0 bg-gradient-to-br from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 border-0 shadow-lg shadow-purple-500/20"
+            data-testid="button-atlantis-ai-submit"
+          >
+            {isQuerying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+          </Button>
         </div>
         <p className="text-xs text-muted-foreground/35 text-center mt-2">
           Powered by DeepSeek · Answers sourced from archive documents
