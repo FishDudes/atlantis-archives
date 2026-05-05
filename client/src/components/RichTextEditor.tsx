@@ -204,7 +204,7 @@ const ResizableImage = Image.extend({
           e.preventDefault();
           e.stopPropagation();
           if (typeof getPos === "function") {
-            editor.chain().focus().setNodeSelection(getPos()).updateAttributes("image", { width, height: "auto" }).run();
+            editor.chain().focus().setNodeSelection((getPos as () => number)()).updateAttributes("image", { width, height: "auto" }).run();
           }
         };
         toolbar.appendChild(btn);
@@ -226,7 +226,7 @@ const ResizableImage = Image.extend({
           e.preventDefault();
           e.stopPropagation();
           if (typeof getPos === "function") {
-            editor.chain().focus().setNodeSelection(getPos()).updateAttributes("image", { align: value }).run();
+            editor.chain().focus().setNodeSelection((getPos as () => number)()).updateAttributes("image", { align: value }).run();
           }
         };
         toolbar.appendChild(btn);

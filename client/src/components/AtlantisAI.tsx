@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Loader2, Send, Sparkles, ExternalLink, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MarkdownText } from "@/components/MarkdownText";
 
 interface Source { id: number; title: string; }
 interface Message { type: "user" | "answer" | "error"; text: string; sources?: Source[]; }
@@ -110,7 +111,7 @@ export function AtlantisAI() {
               )}>
                 {msg.type === "answer" ? (
                   <div className="space-y-2.5">
-                    <p className="whitespace-pre-wrap">{msg.text}</p>
+                    <MarkdownText text={msg.text} />
                     {msg.sources && msg.sources.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 pt-2 border-t border-white/10">
                         <span className="text-xs text-muted-foreground self-center">Sources:</span>
