@@ -1,14 +1,26 @@
 import { useState, useRef, useEffect } from "react";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, Sparkles, ExternalLink, ChevronDown } from "lucide-react";
+import { Loader2, Send, Sparkles, ExternalLink, ChevronDown, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MarkdownText } from "@/components/MarkdownText";
 
 interface Source { id: number; title: string; }
 interface Message { type: "user" | "answer" | "error"; text: string; sources?: Source[]; }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
 export function AtlantisAI() {
+  const [, navigate] = useLocation();
+  const isMobile = useIsMobile();
   const [question, setQuestion] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isQuerying, setIsQuerying] = useState(false);
@@ -62,6 +74,38 @@ export function AtlantisAI() {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
   };
 
+  // ── Mobile: show a tap-to-open card that navigates to the full chat page ──
+  if (isMobile) {
+    return (
+      <div className="mb-8 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-sm overflow-hidden shadow-xl shadow-black/20">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-white/5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-600 via-cyan-500 to-blue-500 flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <Sparkles className="w-3.5 h-3.5 text-white" />
+            </div>
+            <span className="font-display font-semibold text-sm text-foreground tracking-wide">Atlantis AI</span>
+            <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/20 text-cyan-400 font-medium">AI-Powered</span>
+          </div>
+        </div>
+        <div className="px-5 py-5 flex flex-col items-center gap-4 text-center">
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Ask about the archive, alliance rules, or P&amp;W game mechanics.
+          </p>
+          <Button
+            onClick={() => navigate("/ai-chat")}
+            className="w-full bg-gradient-to-br from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 border-0 shadow-lg shadow-purple-500/20 gap-2 h-11 text-sm font-semibold"
+            data-testid="button-open-ai-chat"
+          >
+            <MessageSquare className="w-4 h-4" />
+            Open Atlantis AI Chat
+          </Button>
+          <p className="text-xs text-muted-foreground/35">Powered by DeepSeek · Sourced from the archive</p>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Desktop: full inline widget ──
   return (
     <div className="mb-8 rounded-2xl border border-white/10 bg-card/40 backdrop-blur-sm overflow-hidden shadow-xl shadow-black/20">
       {/* Header */}
