@@ -127,6 +127,25 @@ async function upsertDiscordUser(discordUser: DiscordUser, roles: string[]) {
   }
 }
 
+async function ensureSessionTable() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS sessions (
+        sid varchar NOT NULL,
+        sess json NOT NULL,
+        expire timestamp(6) NOT NULL,
+        CONSTRAINT sessions_pkey PRIMARY KEY (sid)
+      )
+    `);
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON sessions (expire)
+    `);
+    console.log("[auth] Sessions table ready");
+  } catch (err) {
+    console.error("[auth] Failed to ensure sessions table:", err);
+  }
+}
+
 function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
@@ -150,6 +169,7 @@ function getSession() {
 }
 
 export async function setupDiscordAuth(app: Express) {
+  await ensureSessionTable();
   app.set("trust proxy", true);
   app.use(getSession());
 
