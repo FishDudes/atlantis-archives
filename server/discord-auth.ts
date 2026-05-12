@@ -131,7 +131,7 @@ function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     pool: pool as any,
-    createTableIfMissing: true,
+    createTableIfMissing: false,
     tableName: "sessions",
   });
   return session({
