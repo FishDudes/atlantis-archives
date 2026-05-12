@@ -127,7 +127,7 @@ async function upsertDiscordUser(discordUser: DiscordUser, roles: string[]) {
   }
 }
 
-async function ensureSessionTable() {
+async function ensureAllTables() {
   try {
     await pool.query(`
       CREATE TABLE IF NOT EXISTS sessions (
@@ -140,9 +140,52 @@ async function ensureSessionTable() {
     await pool.query(`
       CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON sessions (expire)
     `);
-    console.log("[auth] Sessions table ready");
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
+        email varchar,
+        first_name varchar,
+        last_name varchar,
+        profile_image_url varchar,
+        discord_id varchar UNIQUE,
+        discord_username varchar,
+        discord_avatar varchar,
+        discord_roles text[],
+        created_at timestamp DEFAULT now(),
+        updated_at timestamp DEFAULT now()
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS documents (
+        id serial PRIMARY KEY,
+        title text NOT NULL,
+        content text NOT NULL,
+        author_id text NOT NULL,
+        is_public boolean NOT NULL DEFAULT false,
+        category text NOT NULL DEFAULT 'guidelines',
+        google_doc_url text,
+        allowed_roles text[],
+        created_at timestamp NOT NULL DEFAULT now(),
+        updated_at timestamp NOT NULL DEFAULT now()
+      )
+    `);
+
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS document_versions (
+        id serial PRIMARY KEY,
+        document_id integer NOT NULL REFERENCES documents(id),
+        content text NOT NULL,
+        updated_by text NOT NULL,
+        version_number integer NOT NULL,
+        created_at timestamp NOT NULL DEFAULT now()
+      )
+    `);
+
+    console.log("[auth] All database tables ready");
   } catch (err) {
-    console.error("[auth] Failed to ensure sessions table:", err);
+    console.error("[auth] Failed to ensure database tables:", err);
   }
 }
 
@@ -169,7 +212,7 @@ function getSession() {
 }
 
 export async function setupDiscordAuth(app: Express) {
-  await ensureSessionTable();
+  await ensureAllTables();
   app.set("trust proxy", true);
   app.use(getSession());
 
