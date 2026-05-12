@@ -137,8 +137,9 @@ function getSession() {
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
-    resave: false,
-    saveUninitialized: false,
+    resave: true,
+    saveUninitialized: true,
+    proxy: true,
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -149,7 +150,7 @@ function getSession() {
 }
 
 export async function setupDiscordAuth(app: Express) {
-  app.set("trust proxy", 1);
+  app.set("trust proxy", true);
   app.use(getSession());
 
   const clientId = process.env.DISCORD_CLIENT_ID!;
@@ -158,8 +159,14 @@ export async function setupDiscordAuth(app: Express) {
   app.get("/api/login", (req, res) => {
     const state = crypto.randomBytes(16).toString("hex");
     (req.session as any).oauthState = state;
-    req.session.save(() => {
-      const redirectUri = `${req.protocol}://${req.get("host")}/api/callback`;
+    req.session.save((err) => {
+      if (err) {
+        console.error("Session save error during login:", err);
+        return res.redirect("/?error=session_error");
+      }
+      const proto = (req.headers["x-forwarded-proto"] as string)?.split(",")[0]?.trim() || req.protocol;
+      const host = req.get("host");
+      const redirectUri = `${proto}://${host}/api/callback`;
       const params = new URLSearchParams({
         client_id: clientId,
         redirect_uri: redirectUri,
@@ -167,6 +174,7 @@ export async function setupDiscordAuth(app: Express) {
         scope: "identify email guilds.members.read",
         state,
       });
+      console.log(`[auth] Login redirect — redirectUri: ${redirectUri}, sessionID: ${req.sessionID}`);
       res.redirect(`https://discord.com/api/oauth2/authorize?${params.toString()}`);
     });
   });
