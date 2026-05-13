@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, Sparkles, ExternalLink, ArrowLeft } from "lucide-react";
+import { Loader2, Send, Sparkles, ExternalLink, ArrowLeft, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MarkdownText } from "@/components/MarkdownText";
+import { useAIRateLimit } from "@/hooks/useAIRateLimit";
 
 interface Source { id: number; title: string; }
 interface Message { type: "user" | "answer" | "error"; text: string; sources?: Source[]; }
@@ -15,6 +16,7 @@ export default function AiChat() {
   const [isQuerying, setIsQuerying] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { canSend, inCooldown, cooldownLabel, isTimedOut, timeoutLabel, recordSend } = useAIRateLimit();
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -27,6 +29,7 @@ export default function AiChat() {
   const handleQuery = async () => {
     const q = question.trim();
     if (!q || isQuerying) return;
+    if (!recordSend()) return;
     setMessages((prev) => [...prev, { type: "user", text: q }]);
     setQuestion("");
     if (textareaRef.current) textareaRef.current.style.height = "auto";
@@ -60,6 +63,8 @@ export default function AiChat() {
     e.target.style.height = `${Math.min(e.target.scrollHeight, 140)}px`;
   };
 
+  const sendDisabled = !question.trim() || isQuerying || !canSend;
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Header */}
@@ -79,6 +84,19 @@ export default function AiChat() {
           <span className="text-xs px-2 py-0.5 rounded-full bg-gradient-to-r from-purple-500/20 to-cyan-500/20 border border-purple-500/20 text-cyan-400 font-medium">AI-Powered</span>
         </div>
       </div>
+
+      {/* Rate limit banner */}
+      {(isTimedOut || inCooldown) && (
+        <div className={cn(
+          "flex items-center gap-2 px-4 py-2 text-xs flex-shrink-0",
+          isTimedOut ? "bg-red-500/10 border-b border-red-500/20 text-red-400" : "bg-amber-500/10 border-b border-amber-500/20 text-amber-400"
+        )}>
+          <Clock className="w-3.5 h-3.5 flex-shrink-0" />
+          {isTimedOut
+            ? `You've been timed out for sending too many messages. Try again in ${timeoutLabel}.`
+            : `Please wait ${cooldownLabel} before sending another message.`}
+        </div>
+      )}
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
@@ -176,21 +194,27 @@ export default function AiChat() {
             value={question}
             onChange={handleInput}
             onKeyDown={handleKeyDown}
-            placeholder="Ask anything about the archive..."
+            placeholder={isTimedOut ? "You are timed out from Atlantis AI." : "Ask anything about the archive..."}
             className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed min-h-[36px] max-h-[140px] py-1"
-            disabled={isQuerying}
+            disabled={isQuerying || isTimedOut}
             maxLength={500}
             rows={1}
             data-testid="input-ai-chat"
           />
           <Button
             onClick={handleQuery}
-            disabled={!question.trim() || isQuerying}
+            disabled={sendDisabled}
             size="sm"
             className="h-9 w-9 p-0 flex-shrink-0 rounded-xl bg-gradient-to-br from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 border-0 shadow-lg shadow-purple-500/20"
             data-testid="button-ai-chat-submit"
           >
-            {isQuerying ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+            {isQuerying ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : inCooldown ? (
+              <span className="text-[10px] font-bold tabular-nums">{cooldownLabel}</span>
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
           </Button>
         </div>
         <div className="flex items-center justify-between mt-1.5 px-0.5">

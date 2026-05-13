@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { Loader2, Send, Sparkles, ExternalLink, ChevronDown, MessageSquare } from "lucide-react";
+import { Loader2, Send, Sparkles, ExternalLink, ChevronDown, MessageSquare, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MarkdownText } from "@/components/MarkdownText";
+import { useAIRateLimit } from "@/hooks/useAIRateLimit";
 
 interface Source { id: number; title: string; }
 interface Message { type: "user" | "answer" | "error"; text: string; sources?: Source[]; }
@@ -27,8 +28,8 @@ export function AtlantisAI() {
   const [expanded, setExpanded] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const { canSend, inCooldown, cooldownLabel, isTimedOut, timeoutLabel, recordSend } = useAIRateLimit();
 
-  // Scroll inside the messages container only — never the whole page
   useEffect(() => {
     if (expanded && messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -38,12 +39,11 @@ export function AtlantisAI() {
   const handleQuery = async () => {
     const q = question.trim();
     if (!q || isQuerying) return;
+    if (!recordSend()) return;
     setExpanded(true);
     setMessages((prev) => [...prev, { type: "user", text: q }]);
     setQuestion("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
+    if (textareaRef.current) textareaRef.current.style.height = "auto";
     setIsQuerying(true);
     try {
       const res = await fetch("/api/query", {
@@ -73,6 +73,8 @@ export function AtlantisAI() {
     e.target.style.height = "auto";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
   };
+
+  const sendDisabled = !question.trim() || isQuerying || !canSend;
 
   // ── Mobile: show a tap-to-open card that navigates to the full chat page ──
   if (isMobile) {
@@ -127,7 +129,7 @@ export function AtlantisAI() {
         )}
       </div>
 
-      {/* Message history — scrolls internally, never moves the page */}
+      {/* Message history */}
       {expanded && messages.length > 0 && (
         <div
           ref={messagesContainerRef}
@@ -193,7 +195,24 @@ export function AtlantisAI() {
         </div>
       )}
 
-      {/* Input with animated multi-color glow on hover/focus */}
+      {/* Rate limit notices */}
+      {(isTimedOut || inCooldown) && (
+        <div className="px-5 py-2 border-b border-white/5">
+          {isTimedOut ? (
+            <p className="text-xs text-red-400/80 flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              You've been timed out for sending too many messages. Try again in {timeoutLabel}.
+            </p>
+          ) : (
+            <p className="text-xs text-amber-400/70 flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              Please wait {cooldownLabel} before sending another message.
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Input */}
       <div className="px-4 py-3">
         <div className="ai-glow-input flex items-end gap-2 px-3 py-2 bg-card/60 border border-white/10 rounded-xl">
           <textarea
@@ -203,19 +222,25 @@ export function AtlantisAI() {
             onKeyDown={handleKeyDown}
             placeholder="Ask Atlantis AI anything about the archive..."
             className="flex-1 bg-transparent border-none outline-none text-sm text-foreground placeholder:text-muted-foreground/50 resize-none leading-relaxed min-h-[36px] max-h-[120px] py-1"
-            disabled={isQuerying}
+            disabled={isQuerying || isTimedOut}
             maxLength={500}
             rows={1}
             data-testid="input-atlantis-ai"
           />
           <Button
             onClick={handleQuery}
-            disabled={!question.trim() || isQuerying}
+            disabled={sendDisabled}
             size="sm"
             className="h-8 w-8 p-0 flex-shrink-0 bg-gradient-to-br from-purple-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 border-0 shadow-lg shadow-purple-500/20"
             data-testid="button-atlantis-ai-submit"
           >
-            {isQuerying ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+            {isQuerying ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : inCooldown ? (
+              <span className="text-[10px] font-bold tabular-nums">{cooldownLabel}</span>
+            ) : (
+              <Send className="w-3.5 h-3.5" />
+            )}
           </Button>
         </div>
         <div className="flex items-center justify-between mt-2 px-0.5">
