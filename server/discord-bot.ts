@@ -10,7 +10,7 @@ function log(message: string) {
   console.log(`${formattedTime} [discord-bot] ${message}`);
 }
 
-const SITE_URL = "https://atlantis-archives.onrender.com";
+const SITE_URL = "https://atlantis-archives-p86c.onrender.com";
 
 export async function startDiscordBot() {
   const token = process.env.DISCORD_BOT_TOKEN;
