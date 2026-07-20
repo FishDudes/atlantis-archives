@@ -99,9 +99,15 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
-      startDiscordBot().catch((err) => {
-        log(`Discord bot startup error: ${err}`, "discord-bot");
-      });
+      // Only run the Discord bot in production so the Replit dev environment
+      // doesn't conflict with the bot already running on Render.
+      if (process.env.NODE_ENV === "production") {
+        startDiscordBot().catch((err) => {
+          log(`Discord bot startup error: ${err}`, "discord-bot");
+        });
+      } else {
+        log("Discord bot skipped in development mode", "discord-bot");
+      }
     },
   );
 })();
