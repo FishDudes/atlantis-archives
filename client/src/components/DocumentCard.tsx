@@ -48,7 +48,7 @@ export function DocumentCard({ document }: DocumentCardProps) {
   const categoryLabel = CATEGORIES.find(c => c.value === document.category)?.label || document.category;
 
   return (
-    <Link href={`/document/${document.id}`}>
+    <Link href={`/document/${document.id}`} className="h-full block">
       <div 
         className="group relative h-full bg-card/40 backdrop-blur-sm border border-white/5 rounded-2xl p-6 hover:border-primary/30 hover:bg-card/60 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer overflow-hidden"
         data-testid={`card-document-${document.id}`}

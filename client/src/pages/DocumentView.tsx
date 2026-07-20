@@ -79,7 +79,10 @@ export default function DocumentView({ id }: Props) {
       };
 
       btn.onclick = async () => {
-        const text = bq.textContent?.trim() || "";
+        // Capture text from a clone that excludes the injected button
+        const clone = bq.cloneNode(true) as HTMLElement;
+        clone.querySelector("[data-quote-copy]")?.remove();
+        const text = clone.textContent?.trim() || "";
         try {
           await navigator.clipboard.writeText(text);
         } catch {
