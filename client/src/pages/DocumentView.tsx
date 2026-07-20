@@ -207,7 +207,7 @@ export default function DocumentView({ id }: Props) {
                 </span>
               </div>
 
-              <h1 className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-display font-bold leading-tight text-foreground w-full max-w-full" style={{ wordBreak: 'break-all', overflowWrap: 'break-word', whiteSpace: 'normal' }} data-testid="text-document-title">
+              <h1 className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-display font-bold leading-tight text-foreground w-full max-w-full" style={{ overflowWrap: 'break-word', wordBreak: 'normal', whiteSpace: 'normal' }} data-testid="text-document-title">
                 {document.title}
               </h1>
             </header>
