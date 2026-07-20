@@ -145,13 +145,13 @@ export default function DocumentView({ id }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex overflow-x-hidden">
+    <div className="min-h-screen bg-background flex min-w-0">
       <Navigation />
 
-      <main className="flex-1 lg:ml-72 min-h-screen flex flex-col relative max-w-full overflow-x-hidden">
+      <main className="flex-1 lg:ml-72 min-h-screen flex flex-col relative max-w-full min-w-0">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
-        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-white/5 flex items-center justify-between bg-background/50 backdrop-blur sticky top-0 z-20 pl-14 sm:pl-4 lg:pl-8 overflow-x-hidden">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-white/5 flex items-center justify-between bg-background/50 backdrop-blur sticky top-0 z-20 pl-14 sm:pl-4 lg:pl-8">
           <Button
             variant="ghost"
             className="text-muted-foreground min-w-0"
@@ -195,9 +195,9 @@ export default function DocumentView({ id }: Props) {
           </div>
         </div>
 
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full min-w-0 overflow-x-hidden">
-          <article className="space-y-6 sm:space-y-8">
-            <header className="space-y-3 sm:space-y-4 pb-6 sm:pb-8 border-b border-white/10">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full min-w-0">
+          <article className="space-y-6 sm:space-y-8 min-w-0">
+            <header className="space-y-3 sm:space-y-4 pb-6 sm:pb-8 border-b border-white/10 min-w-0">
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
                 <span className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 text-primary border border-primary/20">
                   <Tag className="w-3 h-3" /> {categoryLabel}
@@ -207,7 +207,7 @@ export default function DocumentView({ id }: Props) {
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold leading-tight text-foreground break-words min-w-0 max-w-full" data-testid="text-document-title">
+              <h1 className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-display font-bold leading-tight text-foreground w-full max-w-full" style={{ wordBreak: 'break-all', overflowWrap: 'break-word', whiteSpace: 'normal' }} data-testid="text-document-title">
                 {document.title}
               </h1>
             </header>

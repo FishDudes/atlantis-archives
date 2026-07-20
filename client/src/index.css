@@ -78,6 +78,12 @@
     overflow-x: auto;
     max-width: 100%;
   }
+
+  /* Ensure all document headings wrap properly on mobile */
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    word-break: break-all;
+    overflow-wrap: break-word;
+  }
 }
 
 @layer utilities {
