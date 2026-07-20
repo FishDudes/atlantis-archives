@@ -65,6 +65,19 @@
     max-width: 100% !important;
     height: auto !important;
   }
+
+  /* Make code blocks and tables scroll internally instead of breaking layout */
+  .prose pre {
+    white-space: pre-wrap !important;
+    word-break: break-word !important;
+    overflow-x: auto;
+  }
+
+  .prose table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
 }
 
 @layer utilities {
