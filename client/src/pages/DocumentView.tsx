@@ -145,10 +145,10 @@ export default function DocumentView({ id }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex overflow-x-hidden">
       <Navigation />
 
-      <main className="flex-1 lg:ml-72 min-h-screen flex flex-col relative">
+      <main className="flex-1 lg:ml-72 min-h-screen flex flex-col relative max-w-full">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
 
         <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 border-b border-white/5 flex items-center justify-between bg-background/50 backdrop-blur sticky top-0 z-20 pl-14 sm:pl-4 lg:pl-8">
@@ -195,7 +195,7 @@ export default function DocumentView({ id }: Props) {
           </div>
         </div>
 
-        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto w-full min-w-0">
           <article className="space-y-6 sm:space-y-8">
             <header className="space-y-3 sm:space-y-4 pb-6 sm:pb-8 border-b border-white/10">
               <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
@@ -207,14 +207,14 @@ export default function DocumentView({ id }: Props) {
                 </span>
               </div>
 
-              <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold leading-tight text-foreground" data-testid="text-document-title">
+              <h1 className="text-2xl sm:text-4xl md:text-5xl font-display font-bold leading-tight text-foreground break-words" data-testid="text-document-title">
                 {document.title}
               </h1>
             </header>
 
             <div
               ref={contentRef}
-              className="prose prose-invert prose-lg max-w-none prose-headings:font-display prose-headings:text-primary prose-a:text-accent prose-blockquote:border-l-primary prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg prose-p:text-foreground/90 prose-li:text-foreground/90 prose-strong:text-foreground font-serif text-lg leading-relaxed"
+              className="prose prose-invert prose-lg max-w-none overflow-x-auto prose-headings:font-display prose-headings:text-primary prose-a:text-accent prose-a:break-words prose-blockquote:border-l-primary prose-blockquote:bg-white/5 prose-blockquote:p-4 prose-blockquote:rounded-r-lg prose-p:text-foreground/90 prose-p:break-words prose-li:text-foreground/90 prose-strong:text-foreground prose-pre:overflow-x-auto prose-table:overflow-x-auto font-serif text-lg leading-relaxed"
               data-testid="text-document-content"
               dangerouslySetInnerHTML={{ __html: document.content }}
             />
