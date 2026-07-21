@@ -30,6 +30,7 @@ export default function DocumentView({ id }: Props) {
   const deleteDocument = useDeleteDocument();
   const [, setLocation] = useLocation();
   const contentRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   // Inject copy buttons into every blockquote after content renders
@@ -119,6 +120,47 @@ export default function DocumentView({ id }: Props) {
     if (document) injectCopyButtons();
   }, [document, injectCopyButtons]);
 
+  // Shrink title font ONLY when a word (e.g. "Experienced/Returning") is too
+  // wide to fit on one line — normal multi-word titles always wrap as-is.
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+
+    const adjust = () => {
+      // Reset overrides first
+      el.style.fontSize = "";
+      el.style.whiteSpace = "";
+
+      const containerWidth = el.parentElement?.offsetWidth ?? el.offsetWidth;
+      const minSize = 14;
+
+      // Measure the widest single "line" by forcing no-wrap temporarily
+      el.style.whiteSpace = "nowrap";
+      const naturalWidth = el.scrollWidth;
+      el.style.whiteSpace = "";
+
+      if (naturalWidth > containerWidth) {
+        // There's at least one token too wide — shrink until it fits
+        let size = parseFloat(getComputedStyle(el).fontSize);
+        el.style.whiteSpace = "nowrap";
+        while (size > minSize && el.scrollWidth > containerWidth) {
+          size -= 1;
+          el.style.fontSize = `${size}px`;
+        }
+        el.style.whiteSpace = "";
+      }
+    };
+
+    const frame = requestAnimationFrame(adjust);
+    const observer = new ResizeObserver(adjust);
+    if (el.parentElement) observer.observe(el.parentElement);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [document?.title]);
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -207,7 +249,7 @@ export default function DocumentView({ id }: Props) {
                 </span>
               </div>
 
-              <h1 className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-display font-bold leading-tight text-foreground w-full max-w-full" style={{ overflowWrap: 'break-word', wordBreak: 'normal', whiteSpace: 'normal' }} data-testid="text-document-title">
+              <h1 ref={titleRef} className="text-base sm:text-2xl md:text-4xl lg:text-5xl font-display font-bold leading-tight text-foreground w-full max-w-full" style={{ overflowWrap: 'break-word', wordBreak: 'normal' }} data-testid="text-document-title">
                 {document.title}
               </h1>
             </header>
